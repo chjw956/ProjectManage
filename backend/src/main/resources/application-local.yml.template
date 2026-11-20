@@ -1,0 +1,13 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/projtrack
+    username: projtrack
+    password: secret
+  flyway:
+    locations: classpath:db/migration,classpath:db/seed
+  jpa:
+    show-sql: true
+
+logging:
+  level:
+    com.example.projtrack: DEBUG

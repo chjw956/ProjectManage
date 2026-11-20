@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./mvnw test*)",
+      "Bash(./mvnw spring-boot:run*)",
+      "Bash(./mvnw clean package*)",
+      "Bash(./mvnw.cmd test*)",
+      "Bash(./mvnw.cmd spring-boot:run*)",
+      "Bash(./mvnw.cmd clean package*)",
+      "Bash(npm run *)",
+      "Bash(npm test*)",
+      "Bash(docker compose up*)",
+      "Bash(docker compose ps*)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./**/application-local.yml)",
+      "Bash(git push*)",
+      "Bash(docker compose down -v*)",
+      "Bash(rm -rf*)"
+    ]
+  }
+}
