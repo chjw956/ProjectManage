@@ -14,6 +14,9 @@ services:
       - '8081:80'
     environment:
       - 'JWT_ENABLED=false'
+      # 백엔드(host.docker.internal 등 사설 IP)에서 문서를 내려받도록 허용.
+      # OnlyOffice 7.x+ 기본값은 사설 IP 다운로드 차단 → "Download failed (-4)" 발생
+      - 'ALLOW_PRIVATE_IP_ADDRESS=true'
     volumes:
       - onlyoffice_data:/var/www/onlyoffice/Data
       - onlyoffice_logs:/var/log/onlyoffice

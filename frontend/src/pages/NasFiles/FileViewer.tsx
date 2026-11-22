@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { fetchOnlyOfficeConfig } from './api'
+import { getDocsApi, loadDocsApi, type DocEditorInstance } from './docsApi'
 import type { NasFileInfo } from './types'
 
 interface FileViewerProps {
@@ -7,8 +8,6 @@ interface FileViewerProps {
   mode: 'view' | 'edit'
   onClose: () => void
 }
-
-const ONLYOFFICE_URL = import.meta.env.VITE_ONLYOFFICE_URL ?? 'http://localhost:8081'
 
 /** 파일 확장자가 PDF인지 여부 */
 function isPdf(ext: string) {
@@ -22,13 +21,12 @@ function isEditorSupported(ext: string) {
 }
 
 export function FileViewer({ file, mode, onClose }: FileViewerProps) {
-  const editorRef = useRef<HTMLDivElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
   const [editorError, setEditorError] = useState<string | null>(null)
   // PDF와 미지원 파일은 초기부터 로딩 상태 없음
   const [loading, setLoading] = useState(
     () => !isPdf(file.extension) && isEditorSupported(file.extension),
   )
-  const editorInstanceRef = useRef<unknown>(null)
 
   // 미지원 확장자는 렌더 시점에 계산 (effect 외부)
   const unsupportedExt = !isPdf(file.extension) && !isEditorSupported(file.extension)
@@ -37,37 +35,36 @@ export function FileViewer({ file, mode, onClose }: FileViewerProps) {
   useEffect(() => {
     if (isPdf(file.extension) || unsupportedExt) return
 
-    let scriptEl: HTMLScriptElement | null = null
     let destroyed = false
+    let editor: DocEditorInstance | null = null
+    const container = containerRef.current
 
     const initEditor = async () => {
       try {
-        const config = await fetchOnlyOfficeConfig(file.fileKey, mode)
-
-        // DocsAPI.js 동적 로드 (중복 로드 방지)
-        const apiUrl = `${ONLYOFFICE_URL}/web-apps/apps/api/documents/api.js`
-        if (!document.querySelector(`script[src="${apiUrl}"]`)) {
-          scriptEl = document.createElement('script')
-          scriptEl.src = apiUrl
-          await new Promise<void>((resolve, reject) => {
-            scriptEl!.onload = () => resolve()
-            scriptEl!.onerror = () => reject(new Error('OnlyOffice API 스크립트 로드 실패'))
-            document.head.appendChild(scriptEl!)
-          })
-        }
-
+        const [config] = await Promise.all([fetchOnlyOfficeConfig(file.fileKey, mode), loadDocsApi()])
         if (destroyed) return
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const DocsAPI = (window as any).DocsAPI
-        if (!DocsAPI || !editorRef.current) return
+        const DocsAPI = getDocsApi()
+        if (!DocsAPI) throw new Error('OnlyOffice API를 불러오지 못했습니다')
+        if (!container) throw new Error('에디터 영역을 찾을 수 없습니다')
 
-        editorInstanceRef.current = new DocsAPI.DocEditor('oo-editor', {
+        // OnlyOffice가 placeholder를 iframe으로 바꾸므로, React가 관리하지 않는 자식 요소를 따로 만든다
+        const placeholder = document.createElement('div')
+        placeholder.id = `oo-editor-${file.fileKey}`
+        container.replaceChildren(placeholder)
+
+        editor = new DocsAPI.DocEditor(placeholder.id, {
           documentType: config.documentType,
           document: config.document,
           editorConfig: config.editorConfig,
           width: '100%',
           height: '100%',
+          events: {
+            onError: (e: { data?: { errorCode?: number; errorDescription?: string } }) => {
+              const d = e?.data
+              setEditorError(`OnlyOffice 오류${d?.errorCode != null ? ` (${d.errorCode})` : ''}: ${d?.errorDescription ?? '문서를 열 수 없습니다'}`)
+            },
+          },
         })
         setLoading(false)
       } catch (e) {
@@ -82,6 +79,8 @@ export function FileViewer({ file, mode, onClose }: FileViewerProps) {
 
     return () => {
       destroyed = true
+      editor?.destroyEditor?.()
+      container?.replaceChildren()
     }
   }, [file.fileKey, file.extension, mode, unsupportedExt])
 
@@ -136,8 +135,8 @@ export function FileViewer({ file, mode, onClose }: FileViewerProps) {
 
         {!error && isEditorSupported(file.extension) && (
           <div
-            id="oo-editor"
-            ref={editorRef}
+            data-testid="oo-editor"
+            ref={containerRef}
             className="w-full h-full"
             style={{ visibility: loading ? 'hidden' : 'visible' }}
           />

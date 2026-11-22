@@ -10,6 +10,12 @@
 
 ## [Unreleased]
 
+### 수정
+- **NAS 파일(xlsx·docx 등)이 웹에서 열리지 않고 "파일을 불러오는 중..."에 멈추던 문제**
+  - OnlyOffice API 스크립트 로드 경쟁 조건: 개발 모드(StrictMode)의 effect 2회 실행 시 두 번째 실행이 로드 완료 전에 통과해 에디터를 만들지 않았음 → 공용 로더(`pages/NasFiles/docsApi.ts`)로 로드 완료까지 대기
+  - OnlyOffice 7.x+가 사설 IP(host.docker.internal)에서 문서 다운로드를 차단해 "Download failed (-4)" 발생 → `compose.yaml`에 `ALLOW_PRIVATE_IP_ADDRESS=true` 추가
+  - 오류가 나도 로딩 표시만 남던 문제 → OnlyOffice `onError`·스크립트 로드 실패를 화면에 표시, 창을 닫으면 에디터 정리
+
 ## [0.4.1] - 2026-11-22
 
 WBS·간트 화면 맞춤 보기, 가로 스크롤 시 사이드바·왼쪽 표 겹침 수정.
