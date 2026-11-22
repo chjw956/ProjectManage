@@ -6,6 +6,7 @@ import com.example.projtrack.history.domain.TimelineEvent;
 import com.example.projtrack.history.repository.IssueRepository;
 import com.example.projtrack.history.repository.TimelineEventRepository;
 import com.example.projtrack.project.domain.Project;
+import com.example.projtrack.project.dto.CreateProjectRequest;
 import com.example.projtrack.project.repository.ProjectRepository;
 import com.example.projtrack.wbs.TaskCalculator;
 import com.example.projtrack.wbs.domain.Milestone;
@@ -38,6 +39,26 @@ public class ProjectService {
     private final ProjectStatusCalculator statusCalculator;
     private final ProjectAccessChecker accessChecker;
     private final Clock clock;
+
+    // -------------------------------------------------------------------------
+    // 사업 등록
+    // -------------------------------------------------------------------------
+
+    @Transactional
+    public ProjectSummaryData createProject(CreateProjectRequest req) {
+        var project = new Project();
+        project.setName(req.name());
+        project.setType(req.type());
+        project.setPhase(req.phase());
+        project.setStartDate(req.startDate());
+        project.setEndDate(req.endDate());
+        project.setSummary(req.summary());
+        // status = "NORMAL" (기본값), securityLevel = "NORMAL" (기본값)
+        var saved = projectRepo.save(project);
+
+        var statusSignal = new ProjectStatusCalculator.StatusSignal("NORMAL", List.of());
+        return new ProjectSummaryData(saved, 0, 0L, statusSignal, null);
+    }
 
     // -------------------------------------------------------------------------
     // 사업 목록

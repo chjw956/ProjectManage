@@ -2,15 +2,21 @@ package com.example.projtrack.project.controller;
 
 import com.example.projtrack.project.ProjectService;
 import com.example.projtrack.project.ProjectStatusCalculator;
+import com.example.projtrack.project.dto.CreateProjectRequest;
 import com.example.projtrack.project.dto.ProjectHomeResponse;
 import com.example.projtrack.project.dto.ProjectSummaryResponse;
 import com.example.projtrack.wbs.domain.Milestone;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Clock;
@@ -28,6 +34,14 @@ public class ProjectController {
     private final Clock clock;
 
     // -------------------------------------------------------------------------
+
+    @Operation(summary = "신규 사업 등록")
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public ProjectSummaryResponse createProject(@RequestBody @Valid CreateProjectRequest req) {
+        LocalDate today = LocalDate.now(clock);
+        return toSummaryResponse(projectService.createProject(req), today);
+    }
 
     @Operation(summary = "사업 목록 조회 (포트폴리오 대시보드)")
     @GetMapping
