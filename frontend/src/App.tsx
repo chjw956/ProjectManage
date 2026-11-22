@@ -28,7 +28,7 @@ function Sidebar() {
   const isFiles = isProjectContext && pathname.includes('/files')
 
   return (
-    <aside className="fixed inset-y-0 left-0 w-56 bg-slate-900 text-slate-100 flex flex-col z-10">
+    <aside className="fixed inset-y-0 left-0 w-56 bg-slate-900 text-slate-100 flex flex-col z-40">
       {/* 로고 */}
       <div className="flex items-center gap-2 px-5 py-5 border-b border-slate-700">
         <div className="w-7 h-7 rounded-md bg-blue-500 flex items-center justify-center">
@@ -144,7 +144,8 @@ function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen bg-slate-50">
       <Sidebar />
-      <div className="flex-1 ml-56 flex flex-col min-h-screen">
+      {/* min-w-0: 넓은 콘텐츠(간트 등)가 본문 폭을 늘려 페이지 전체가 가로 스크롤되지 않도록, 스크롤은 각 화면 안에서 처리 */}
+      <div className="flex-1 min-w-0 ml-56 flex flex-col min-h-screen">
         {children}
       </div>
     </div>

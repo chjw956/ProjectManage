@@ -39,7 +39,8 @@ export const MILESTONE_COLOR: Record<string, string> = {
   DEFAULT: '#8b5cf6',  // violet-500
 }
 
-export const WEEK_COL_WIDTH_PX = 80
+/** "주 단위" 보기에서 1주 열 너비(px). 기본 "기간 축소" 보기는 화면 폭에 맞춘다. */
+export const WEEK_COL_WIDTH_PX = 44
 
 /** 마일스톤 유형 → 표시명 (MilestoneBar 색상 키와 같은 값) */
 export const MILESTONE_TYPE_LABEL: Record<string, string> = {

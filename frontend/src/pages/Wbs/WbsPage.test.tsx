@@ -276,4 +276,56 @@ describe('WbsPage', () => {
     expect(screen.getByRole('heading', { name: '계획 일정 변경' })).toBeInTheDocument()
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
+
+  // ---- 타임라인 폭·겹침 ----
+
+  it('기본 보기는 "기간 축소": 타임라인이 화면 폭에 맞춰지고(고정 폭 없음) 눈금은 월 라벨만 표시', async () => {
+    renderWbs()
+    await screen.findByText('수출 승인 서류 작성')
+
+    const cells = screen.getAllByTestId('timeline-cell')
+    cells.forEach((c) => expect(c.style.width).toBe(''))
+    expect(screen.getByRole('button', { name: /주 단위/ })).toBeInTheDocument()
+
+    const header = screen.getByTestId('gantt-header-ticks')
+    expect(within(header).getAllByText(/^\d{2}\.\d{2}$/).length).toBeGreaterThan(0)
+    expect(within(header).queryByText(/^\d{1,2}\/\d{1,2}$/)).not.toBeInTheDocument()
+  })
+
+  it('"주 단위"로 바꾸면 1주 = 44px 고정 폭이 되고 일자 눈금(M/d)이 표시된다', async () => {
+    const user = userEvent.setup()
+    renderWbs()
+    await screen.findByText('수출 승인 서류 작성')
+    await user.click(screen.getByRole('button', { name: /주 단위/ }))
+
+    const header = screen.getByTestId('gantt-header-ticks')
+    const tickCount = header.children.length
+    expect(header.style.width).toBe(`${tickCount * 44}px`)
+    screen.getAllByTestId('timeline-cell').forEach((c) => expect(c.style.width).toBe(`${tickCount * 44}px`))
+    expect(within(header).getAllByText(/^\d{1,2}\/\d{1,2}$/).length).toBeGreaterThan(0)
+  })
+
+  it('기간 축소 보기에서도 오늘 기준선이 % 위치로 표시된다', async () => {
+    renderWbs()
+    await screen.findByText('수출 승인 서류 작성')
+    const line = document.querySelector<HTMLElement>('[data-testid="today-line"]')
+    expect(line).not.toBeNull()
+    expect(line!.style.left).toMatch(/%$/)
+  })
+
+  it('막대 영역은 별도 쌓임 맥락(isolate)이고 왼쪽 고정 칸이 더 위(z-20)에 있다 — 가로 스크롤 시 막대가 표를 덮지 않음', async () => {
+    renderWbs('?scale=week')
+    await screen.findByText('수출 승인 서류 작성')
+    const cell = screen.getAllByTestId('timeline-cell')[0]
+    expect(cell).toHaveClass('isolate')
+    const stickyLeft = cell.parentElement!.firstElementChild as HTMLElement
+    expect(stickyLeft).toHaveClass('sticky', 'left-0', 'z-20')
+  })
+
+  it('날짜 헤더는 본문과 같은 스크롤 컨테이너 안에 있어 가로 스크롤을 함께 따라간다', async () => {
+    renderWbs('?scale=week')
+    await screen.findByText('수출 승인 서류 작성')
+    const scroll = screen.getByTestId('gantt-scroll')
+    expect(scroll).toContainElement(screen.getByTestId('gantt-header-ticks'))
+  })
 })

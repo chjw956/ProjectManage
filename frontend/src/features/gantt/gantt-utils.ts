@@ -1,77 +1,75 @@
-import { differenceInDays, parseISO } from 'date-fns'
-import { WEEK_COL_WIDTH_PX } from '@/lib/constants'
+import { addDays, differenceInCalendarDays, format, parseISO, startOfWeek } from 'date-fns'
 
 /**
- * 날짜를 타임라인 시작일 기준 px 오프셋으로 변환.
- * 1주 = WEEK_COL_WIDTH_PX px
+ * 간트 타임라인.
+ * - start: 첫 주 눈금(월요일). 막대·오늘선·눈금이 모두 이 날짜를 0으로 삼는다.
+ * - ticks: 주 눈금(월요일) 목록. 열 i는 [ticks[i], ticks[i] + 7일)을 덮는다.
+ * - totalDays: ticks.length × 7
+ *
+ * 위치는 백분율로 계산하므로 "주 단위"(고정 px 폭)·"기간 축소"(화면 폭) 모두 같은 함수로 그린다.
  */
-export function dateToOffset(dateStr: string, rangeStart: string): number {
-  const days = differenceInDays(parseISO(dateStr), parseISO(rangeStart))
-  return Math.round((days / 7) * WEEK_COL_WIDTH_PX)
+export interface Timeline {
+  start: string
+  ticks: string[]
+  totalDays: number
 }
 
-/**
- * 두 날짜 사이의 막대 너비(px).
- * 최소 4px 보장.
- */
-export function dateRangeWidth(
-  startStr: string,
-  endStr: string,
-  rangeStart: string,
-): number {
-  const startOffset = dateToOffset(startStr, rangeStart)
-  const endOffset = dateToOffset(endStr, rangeStart)
-  const raw = endOffset - startOffset + Math.round(WEEK_COL_WIDTH_PX / 7)
-  return Math.max(4, raw)
+/** 패딩(일): 가장 이른·늦은 날짜 양쪽 여백 */
+const PAD_DAYS = 14
+
+/** 로컬 날짜를 yyyy-MM-dd로. (toISOString은 UTC라 KST에서 하루 밀린다) */
+export function toIsoDate(d: Date): string {
+  return format(d, 'yyyy-MM-dd')
 }
 
-/**
- * 간트 범위 계산.
- * processes의 모든 plannedStart/End, actualStart/End를 모아 최솟값·최댓값을 구한다.
- * 패딩은 양쪽 2주.
- */
-export function calcTimelineRange(dates: (string | null)[]): { start: string; end: string } {
+export function todayIso(): string {
+  return toIsoDate(new Date())
+}
+
+/** 날짜 목록으로 타임라인을 만든다. 날짜가 없으면 오늘 기준 -2주 ~ +8주. */
+export function buildTimeline(dates: (string | null | undefined)[], today: string = todayIso()): Timeline {
   const valid = dates.filter((d): d is string => !!d).map((d) => parseISO(d))
-  if (valid.length === 0) {
-    const today = new Date()
-    const pad = new Date(today)
-    pad.setDate(pad.getDate() - 14)
-    const padEnd = new Date(today)
-    padEnd.setDate(padEnd.getDate() + 14 * 4)
-    return {
-      start: formatIso(pad),
-      end: formatIso(padEnd),
-    }
-  }
-  const min = new Date(Math.min(...valid.map((d) => d.getTime())))
-  const max = new Date(Math.max(...valid.map((d) => d.getTime())))
-  min.setDate(min.getDate() - 14)
-  max.setDate(max.getDate() + 14)
-  return { start: formatIso(min), end: formatIso(max) }
-}
+  const t = parseISO(today)
+  const min = valid.length ? new Date(Math.min(...valid.map((d) => d.getTime()))) : t
+  const max = valid.length ? new Date(Math.max(...valid.map((d) => d.getTime()))) : addDays(t, 7 * 6)
 
-function formatIso(d: Date): string {
-  return d.toISOString().slice(0, 10)
-}
+  const first = startOfWeek(addDays(min, -PAD_DAYS), { weekStartsOn: 1 })
+  const last = addDays(max, PAD_DAYS)
 
-/**
- * 주눈금 목록 생성 (타임라인 범위 내 월요일 기준).
- */
-export function buildWeekTicks(rangeStart: string, rangeEnd: string): string[] {
   const ticks: string[] = []
-  const start = parseISO(rangeStart)
-  const end = parseISO(rangeEnd)
-
-  // 첫 월요일로 맞춤
-  const cur = new Date(start)
-  const dow = cur.getDay()
-  if (dow !== 1) {
-    cur.setDate(cur.getDate() + ((8 - dow) % 7))
+  for (let cur = first; cur <= last; cur = addDays(cur, 7)) {
+    ticks.push(toIsoDate(cur))
   }
+  return { start: ticks[0], ticks, totalDays: ticks.length * 7 }
+}
 
-  while (cur <= end) {
-    ticks.push(formatIso(cur))
-    cur.setDate(cur.getDate() + 7)
+/** 날짜의 왼쪽 위치(%). 범위 밖이면 0 미만·100 초과가 될 수 있다. */
+export function datePct(date: string, tl: Timeline): number {
+  return (differenceInCalendarDays(parseISO(date), parseISO(tl.start)) / tl.totalDays) * 100
+}
+
+/** start~end(양 끝 포함) 막대 너비(%). end < start면 0. */
+export function spanPct(start: string, end: string, tl: Timeline): number {
+  const days = differenceInCalendarDays(parseISO(end), parseISO(start)) + 1
+  return (Math.max(0, days) / tl.totalDays) * 100
+}
+
+/** 눈금 라벨: 월이 바뀌는 눈금은 "26.08", 나머지는 showDays일 때만 "8/10". */
+export function tickLabel(ticks: string[], i: number, showDays: boolean): { text: string; isMonth: boolean } | null {
+  const tick = ticks[i]
+  const isMonth = i === 0 || tick.slice(5, 7) !== ticks[i - 1].slice(5, 7)
+  // 첫 눈금 바로 뒤(2눈금 이내)에 월이 바뀌면 첫 라벨은 생략해 라벨이 겹치지 않게 한다
+  if (i === 0 && ticks.slice(1, 3).some((t) => t.slice(5, 7) !== tick.slice(5, 7))) {
+    return showDays ? { text: `${Number(tick.slice(5, 7))}/${Number(tick.slice(8, 10))}`, isMonth: false } : null
   }
-  return ticks
+  if (isMonth) return { text: `${tick.slice(2, 4)}.${tick.slice(5, 7)}`, isMonth: true }
+  if (!showDays) return null
+  return { text: `${Number(tick.slice(5, 7))}/${Number(tick.slice(8, 10))}`, isMonth: false }
+}
+
+/** 간트 행들이 공유하는 레이아웃. widthPx가 있으면 "주 단위"(고정 폭), 없으면 "기간 축소"(화면 폭). */
+export interface GanttLayout {
+  timeline: Timeline
+  widthPx?: number
+  todayPct: number
 }

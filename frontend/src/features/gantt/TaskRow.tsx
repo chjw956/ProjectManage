@@ -6,6 +6,7 @@ import { GanttBar } from './GanttBar'
 import { ChangeScheduleModal } from './ChangeScheduleModal'
 import { WbsItemDetailModal } from './WbsItemDetailModal'
 import { TimelineCell } from './ProcessRow'
+import type { GanttLayout } from './gantt-utils'
 import { TaskFormModal } from './TaskFormModal'
 import { DeleteConfirmModal } from './DeleteConfirmModal'
 import { useInvalidateWbs } from './useInvalidateWbs'
@@ -15,16 +16,12 @@ interface TaskRowProps {
   task: GanttTaskRow
   processName?: string
   projectId: number
-  rangeStart: string
-  scale: 'week' | 'fit'
-  ticks: string[]
-  totalWidth: number | undefined
-  todayOffset: number
+  layout: GanttLayout
   leftW: number
   isLastInGroup?: boolean
 }
 
-export function TaskRow({ task, processName, projectId, rangeStart, scale, ticks, totalWidth, todayOffset, leftW, isLastInGroup }: TaskRowProps) {
+export function TaskRow({ task, processName, projectId, layout, leftW, isLastInGroup }: TaskRowProps) {
   const [modal, setModal] = useState<null | 'detail' | 'edit' | 'delete' | 'schedule'>(null)
   const close = () => setModal(null)
   const delayed = task.delayed ?? false
@@ -45,7 +42,7 @@ export function TaskRow({ task, processName, projectId, rangeStart, scale, ticks
       <div className={`flex border-b ${isLastInGroup ? 'border-slate-200' : 'border-slate-100'} hover:bg-blue-50 group`}>
         {/* 왼쪽 고정 셀 — sticky */}
         <div
-          className="flex shrink-0 items-center sticky left-0 z-10 bg-white group-hover:bg-blue-50 border-r border-slate-200"
+          className="flex shrink-0 items-center sticky left-0 z-20 bg-white group-hover:bg-blue-50 border-r border-slate-200"
           style={{ width: leftW }}
         >
           <div className="flex w-52 items-center gap-1.5 px-4 py-0 h-11 pl-10">
@@ -75,10 +72,7 @@ export function TaskRow({ task, processName, projectId, rangeStart, scale, ticks
 
         {/* 오른쪽 간트 셀 */}
         <TimelineCell
-          scale={scale}
-          ticks={ticks}
-          totalWidth={totalWidth}
-          todayOffset={todayOffset}
+          layout={layout}
         >
           <div data-testid="gantt-bar-area" className="cursor-pointer h-full" onClick={() => setModal('schedule')}>
             <GanttBar
@@ -87,7 +81,7 @@ export function TaskRow({ task, processName, projectId, rangeStart, scale, ticks
               actualStart={task.actualStart ?? null}
               actualEnd={task.actualEnd ?? null}
               delayed={delayed}
-              rangeStart={rangeStart}
+              timeline={layout.timeline}
             />
           </div>
         </TimelineCell>

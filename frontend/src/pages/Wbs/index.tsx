@@ -15,7 +15,7 @@ export function WbsPage() {
   const [modal, setModal] = useState<null | 'add-process' | 'milestones'>(null)
 
   const view         = (searchParams.get('view')      ?? 'gantt') as 'gantt' | 'list'
-  const scale        = (searchParams.get('scale')     ?? 'week')  as 'week' | 'fit'
+  const scale        = (searchParams.get('scale')     ?? 'fit')  as 'week' | 'fit'
   const q            = searchParams.get('q')          ?? ''
   const deptFilter   = searchParams.get('dept')       ?? ''
   const statusFilter = searchParams.get('taskStatus') ?? ''
