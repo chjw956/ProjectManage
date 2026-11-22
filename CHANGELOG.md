@@ -10,6 +10,10 @@
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-11-22
+
+WBS·간트 화면 맞춤 보기, 가로 스크롤 시 사이드바·왼쪽 표 겹침 수정.
+
 ### 변경
 - **WBS·간트 기본 보기를 "기간 축소"(화면 맞춤)로 변경**: 가로 스크롤 없이 전체 기간을 한 화면에 표시, 눈금은 월 라벨만
 - "주 단위" 보기의 1주 열 너비 80px → 44px
@@ -117,7 +121,8 @@ WBS·간트 화면에서 공정·Task·마일스톤 일정 관리, 담당자 변
 - **API 문서**: springdoc-openapi Swagger UI (`/swagger-ui.html`)
 - **문서**: 설계서 `docs/design.md`, 슬라이스 계획 `docs/plans/slice-01-project-wbs.md`, 화면 참고 이미지 `docs/screens/`
 
-[Unreleased]: https://github.com/chjw956/ProjectManage/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/chjw956/ProjectManage/compare/v0.4.1...HEAD
+[0.4.1]: https://github.com/chjw956/ProjectManage/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/chjw956/ProjectManage/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/chjw956/ProjectManage/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/chjw956/ProjectManage/compare/v0.1.0...v0.2.0
