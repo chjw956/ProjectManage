@@ -10,6 +10,10 @@
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-22
+
+사업 등록, NAS·OnlyOffice 연동, frontend 초기 구성.
+
 ### 추가
 - **사업 등록 API**: `POST /api/v1/projects` — 사업명·유형(INTERNAL/GOV)·단계·기간·한 줄 요약으로 신규 사업 생성 (`CreateProjectRequest`)
 - **NAS 폴더 연동**
@@ -51,5 +55,6 @@
 - **API 문서**: springdoc-openapi Swagger UI (`/swagger-ui.html`)
 - **문서**: 설계서 `docs/design.md`, 슬라이스 계획 `docs/plans/slice-01-project-wbs.md`, 화면 참고 이미지 `docs/screens/`
 
-[Unreleased]: https://github.com/chjw956/ProjectManage/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/chjw956/ProjectManage/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/chjw956/ProjectManage/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/chjw956/ProjectManage/releases/tag/v0.1.0
