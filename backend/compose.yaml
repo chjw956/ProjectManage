@@ -7,3 +7,17 @@ services:
       - 'POSTGRES_USER=projtrack'
     ports:
       - '5432:5432'
+
+  onlyoffice:
+    image: 'onlyoffice/documentserver:8.2'
+    ports:
+      - '8081:80'
+    environment:
+      - 'JWT_ENABLED=false'
+    volumes:
+      - onlyoffice_data:/var/www/onlyoffice/Data
+      - onlyoffice_logs:/var/log/onlyoffice
+
+volumes:
+  onlyoffice_data:
+  onlyoffice_logs:

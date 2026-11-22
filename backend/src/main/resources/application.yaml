@@ -18,3 +18,11 @@ springdoc:
     path: /swagger-ui.html
     url: /v3/api-docs
     disable-swagger-default-url: true
+
+nas:
+  allowed-roots:
+    - /mnt/nas
+
+onlyoffice:
+  server-url: http://localhost:8081
+  callback-host: http://localhost:8080
