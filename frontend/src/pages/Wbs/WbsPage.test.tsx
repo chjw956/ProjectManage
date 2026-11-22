@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { HttpResponse, http } from 'msw'
@@ -119,7 +119,7 @@ describe('WbsPage', () => {
       expect(screen.getByText('수출 승인 서류 작성')).toBeInTheDocument()
     })
     // Task 행 간트 영역 클릭 → 모달 열기
-    const ganttAreas = document.querySelectorAll('.cursor-pointer')
+    const ganttAreas = screen.getAllByTestId('gantt-bar-area')
     await user.click(ganttAreas[0])
     // 사유 없이 저장
     const saveBtn = screen.getByRole('button', { name: '저장' })
@@ -149,7 +149,7 @@ describe('WbsPage', () => {
     await waitFor(() => {
       expect(screen.getByText('수출 승인 서류 작성')).toBeInTheDocument()
     })
-    const ganttAreas = document.querySelectorAll('.cursor-pointer')
+    const ganttAreas = screen.getAllByTestId('gantt-bar-area')
     await user.click(ganttAreas[0])
     // 사유 입력
     const reasonField = screen.getByRole('textbox', { name: /변경 사유/ })
@@ -212,5 +212,67 @@ describe('WbsPage', () => {
     expect(milestoneBar?.querySelectorAll('.rounded-full.inline-flex').length).toBe(
       milestonesFixture.length,
     )
+  })
+
+  // ---- 공정·Task 상세 보기 ----
+
+  it('Task 이름을 누르면 상세 창에 소속 공정·기간·담당 정보가 표시된다', async () => {
+    const user = userEvent.setup()
+    renderWbs()
+    await user.click(await screen.findByRole('button', { name: '대외기관 사전 협의' }))
+
+    const dialog = screen.getByRole('dialog', { name: '대외기관 사전 협의' })
+    expect(within(dialog).getByText('세부 Task · 수출 승인 신청')).toBeInTheDocument()
+    expect(within(dialog).getByText('2026.08.03 ~ 2026.10.04')).toBeInTheDocument()  // 계획
+    expect(within(dialog).getByText('2026.08.03 ~ 2026.10.10')).toBeInTheDocument()  // 실제
+    expect(within(dialog).getByText('Project-C')).toBeInTheDocument()
+    expect(within(dialog).getByText('완료')).toBeInTheDocument()
+  })
+
+  it('지연 Task 상세는 상태를 "지연"으로, 실제 종료 전이면 "진행 중"으로 표시한다', async () => {
+    const user = userEvent.setup()
+    renderWbs()
+    await user.click(await screen.findByRole('button', { name: '전문위·보호위 심의 대응(1차)' }))
+
+    const dialog = screen.getByRole('dialog')
+    expect(within(dialog).getByText('지연')).toBeInTheDocument()
+    expect(within(dialog).getByText('2026.10.14 ~ 진행 중')).toBeInTheDocument()
+  })
+
+  it('Task 상세에서 "일정 변경"을 누르면 일정 변경 창으로 전환된다', async () => {
+    const user = userEvent.setup()
+    renderWbs()
+    await user.click(await screen.findByRole('button', { name: '수출 승인 서류 작성' }))
+    await user.click(screen.getByRole('button', { name: '일정 변경' }))
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '계획 일정 변경' })).toBeInTheDocument()
+    expect(screen.getByLabelText('시작일')).toHaveValue('2026-08-03')
+  })
+
+  it('공정 이름을 누르면 공정 상세(하위 Task 수·공사 여부)가 표시되고, 접기 상태는 바뀌지 않는다', async () => {
+    const user = userEvent.setup()
+    renderWbs()
+    await user.click(await screen.findByRole('button', { name: '수출 승인 신청' }))
+
+    const dialog = screen.getByRole('dialog', { name: '수출 승인 신청' })
+    expect(within(dialog).getByText('3건')).toBeInTheDocument()
+    expect(within(dialog).getByText('비공사')).toBeInTheDocument()
+    expect(within(dialog).queryByRole('button', { name: '일정 변경' })).not.toBeInTheDocument()
+
+    await user.click(within(dialog).getByRole('button', { name: '닫기' }))
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    // 공정 이름 클릭은 접기·펼치기와 무관 — 세부 Task가 그대로 보인다
+    expect(screen.getByText('수출 승인 서류 작성')).toBeInTheDocument()
+  })
+
+  it('막대 영역 클릭은 기존처럼 일정 변경 창을 연다', async () => {
+    const user = userEvent.setup()
+    renderWbs()
+    await screen.findByText('수출 승인 서류 작성')
+    await user.click(screen.getAllByTestId('gantt-bar-area')[0])
+
+    expect(screen.getByRole('heading', { name: '계획 일정 변경' })).toBeInTheDocument()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 })

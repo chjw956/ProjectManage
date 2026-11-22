@@ -3,10 +3,12 @@ import { Badge } from '@/components/Badge'
 import type { GanttTaskRow } from '@/api/generated/model'
 import { GanttBar } from './GanttBar'
 import { ChangeScheduleModal } from './ChangeScheduleModal'
+import { WbsItemDetailModal } from './WbsItemDetailModal'
 import { TimelineCell } from './ProcessRow'
 
 interface TaskRowProps {
   task: GanttTaskRow
+  processName?: string
   projectId: number
   rangeStart: string
   scale: 'week' | 'fit'
@@ -17,8 +19,9 @@ interface TaskRowProps {
   isLastInGroup?: boolean
 }
 
-export function TaskRow({ task, projectId, rangeStart, scale, ticks, totalWidth, todayOffset, leftW, isLastInGroup }: TaskRowProps) {
+export function TaskRow({ task, processName, projectId, rangeStart, scale, ticks, totalWidth, todayOffset, leftW, isLastInGroup }: TaskRowProps) {
   const [showModal, setShowModal] = useState(false)
+  const [showDetail, setShowDetail] = useState(false)
   const delayed = task.delayed ?? false
 
   return (
@@ -33,9 +36,14 @@ export function TaskRow({ task, projectId, rangeStart, scale, ticks, totalWidth,
             {delayed && (
               <span className="shrink-0 w-1.5 h-1.5 rounded-full bg-red-400" title="지연" />
             )}
-            <span className={`truncate text-sm ${delayed ? 'text-red-700' : 'text-slate-700'}`}>
+            <button
+              type="button"
+              onClick={() => setShowDetail(true)}
+              title={`${task.name} 상세 보기`}
+              className={`truncate text-left text-sm cursor-pointer hover:underline ${delayed ? 'text-red-700' : 'text-slate-700 hover:text-blue-700'}`}
+            >
               {task.name}
-            </span>
+            </button>
           </div>
           <div className="w-24 px-2 text-xs text-slate-500 truncate">{task.dept || '—'}</div>
           <div className="w-20 px-2 text-xs text-slate-500 truncate">{task.assignee || '—'}</div>
@@ -56,7 +64,7 @@ export function TaskRow({ task, projectId, rangeStart, scale, ticks, totalWidth,
           totalWidth={totalWidth}
           todayOffset={todayOffset}
         >
-          <div className="cursor-pointer h-full" onClick={() => setShowModal(true)}>
+          <div data-testid="gantt-bar-area" className="cursor-pointer h-full" onClick={() => setShowModal(true)}>
             <GanttBar
               plannedStart={task.plannedStart ?? null}
               plannedEnd={task.plannedEnd ?? null}
@@ -68,6 +76,19 @@ export function TaskRow({ task, projectId, rangeStart, scale, ticks, totalWidth,
           </div>
         </TimelineCell>
       </div>
+
+      {showDetail && (
+        <WbsItemDetailModal
+          kind="task"
+          task={task}
+          processName={processName}
+          onClose={() => setShowDetail(false)}
+          onChangeSchedule={() => {
+            setShowDetail(false)
+            setShowModal(true)
+          }}
+        />
+      )}
 
       {showModal && (
         <ChangeScheduleModal

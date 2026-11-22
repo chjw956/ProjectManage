@@ -5,6 +5,7 @@ import { formatDate } from '@/lib/date'
 import type { GanttProcessRow } from '@/api/generated/model'
 import { GanttBar } from './GanttBar'
 import { TaskRow } from './TaskRow'
+import { WbsItemDetailModal } from './WbsItemDetailModal'
 
 interface ProcessRowProps {
   process: GanttProcessRow
@@ -23,6 +24,7 @@ export function ProcessRow({
   process, projectId, rangeStart, scale, ticks, totalWidth, todayOffset, leftW, isLast, defaultExpanded = true,
 }: ProcessRowProps) {
   const [expanded, setExpanded] = useState(defaultExpanded)
+  const [showDetail, setShowDetail] = useState(false)
   const subtasks = process.subtasks ?? []
 
   return (
@@ -48,7 +50,14 @@ export function ProcessRow({
                 <path d="M3 2l4 3-4 3V2z" />
               </svg>
             </button>
-            <span className="truncate text-sm font-semibold text-slate-800">{process.name}</span>
+            <button
+              type="button"
+              onClick={() => setShowDetail(true)}
+              title={`${process.name} 상세 보기`}
+              className="truncate text-left text-sm font-semibold text-slate-800 cursor-pointer hover:text-blue-700 hover:underline"
+            >
+              {process.name}
+            </button>
           </div>
           {/* 담당 부서 — 공정 행은 비워둠 (기간 정보로 대체) */}
           <div className="w-24 px-2 text-xs text-slate-500 truncate">
@@ -77,11 +86,16 @@ export function ProcessRow({
         </TimelineCell>
       </div>
 
+      {showDetail && (
+        <WbsItemDetailModal kind="process" process={process} onClose={() => setShowDetail(false)} />
+      )}
+
       {/* 세부 Task */}
       {expanded && subtasks.map((task, idx) => (
         <TaskRow
           key={task.taskId}
           task={task}
+          processName={process.name}
           projectId={projectId}
           rangeStart={rangeStart}
           scale={scale}

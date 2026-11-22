@@ -21,6 +21,10 @@
   - 목표일 경과 여부(`overdue`)를 서버에서 계산해 "기한 초과"로 표시
   - 이슈 0건이면 버튼 비활성화
   - 공용 컴포넌트 `features/issue-register/OpenIssuesModal`
+- **WBS·간트 공정/Task 상세 보기**: 왼쪽 표의 공정·Task 이름을 누르면 상세 창 표시 (`features/gantt/WbsItemDetailModal`)
+  - Task: 소속 공정, 상태(지연 포함), 진행률, 담당 부서·담당자, 계획·실제 기간. "일정 변경" 버튼으로 일정 변경 창 전환
+  - 공정: 상태, 진행률, 담당자, 계획 기간, 세부 Task 수, 공사 여부, 금액
+  - 간트 막대 클릭은 기존과 같이 일정 변경 창을 연다
 
 ### 변경
 - NAS 경로가 허용 루트 밖일 때 응답을 `403 Forbidden` → `400 Bad Request`로 변경 (`InvalidNasPathException`). 폴더 등록·수정·파일 조회 API 모두 해당
