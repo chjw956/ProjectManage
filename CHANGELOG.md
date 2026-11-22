@@ -10,6 +10,10 @@
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-22
+
+증적자료 폴더 등록, 열린 이슈 모달, WBS·간트 상세 보기.
+
 ### 추가
 - **사업 등록 시 증적자료 폴더 등록 (선택)**: 새 프로젝트 등록 모달에 폴더 이름·NAS 경로 입력란 추가
   - `POST /api/v1/projects`에 `evidenceFolderLabel`, `evidenceFolderPath` 필드 추가. 경로가 있으면 폴더 이름 필수
@@ -74,6 +78,7 @@
 - **API 문서**: springdoc-openapi Swagger UI (`/swagger-ui.html`)
 - **문서**: 설계서 `docs/design.md`, 슬라이스 계획 `docs/plans/slice-01-project-wbs.md`, 화면 참고 이미지 `docs/screens/`
 
-[Unreleased]: https://github.com/chjw956/ProjectManage/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/chjw956/ProjectManage/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/chjw956/ProjectManage/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/chjw956/ProjectManage/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/chjw956/ProjectManage/releases/tag/v0.1.0
