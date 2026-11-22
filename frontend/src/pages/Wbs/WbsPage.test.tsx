@@ -161,7 +161,7 @@ describe('WbsPage', () => {
     })
   })
 
-  it('데이터가 없는 공정은 EmptyState를 보여준다', async () => {
+  it('공정이 없으면 빈 상태와 "첫 공정 추가하기" 버튼을 보여준다', async () => {
     server.use(
       http.get('/api/v1/projects/:projectId/gantt', () =>
         HttpResponse.json({ projectId: 1, progress: 0, processes: [] }),
@@ -172,7 +172,8 @@ describe('WbsPage', () => {
     )
     renderWbs()
     await waitFor(() => {
-      expect(screen.getByText('검색 결과가 없습니다')).toBeInTheDocument()
+      expect(screen.getByText('등록된 공정이 없습니다')).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: '첫 공정 추가하기' })).toBeInTheDocument()
     })
   })
 

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useDeleteTask } from '@/api/generated/task'
 import { Badge } from '@/components/Badge'
 import { WEEK_COL_WIDTH_PX } from '@/lib/constants'
 import { formatDate } from '@/lib/date'
@@ -6,6 +7,9 @@ import type { GanttProcessRow } from '@/api/generated/model'
 import { GanttBar } from './GanttBar'
 import { TaskRow } from './TaskRow'
 import { WbsItemDetailModal } from './WbsItemDetailModal'
+import { TaskFormModal } from './TaskFormModal'
+import { DeleteConfirmModal } from './DeleteConfirmModal'
+import { useInvalidateWbs } from './useInvalidateWbs'
 
 interface ProcessRowProps {
   process: GanttProcessRow
@@ -18,14 +22,30 @@ interface ProcessRowProps {
   leftW: number
   isLast?: boolean
   defaultExpanded?: boolean
+  /** 검색·필터와 무관한 전체 세부 Task 수 (상세·삭제 경고용). 없으면 표시 중인 수 */
+  totalSubtaskCount?: number
 }
 
 export function ProcessRow({
   process, projectId, rangeStart, scale, ticks, totalWidth, todayOffset, leftW, isLast, defaultExpanded = true,
+  totalSubtaskCount,
 }: ProcessRowProps) {
   const [expanded, setExpanded] = useState(defaultExpanded)
-  const [showDetail, setShowDetail] = useState(false)
+  const [modal, setModal] = useState<null | 'detail' | 'edit' | 'delete' | 'add-task'>(null)
+  const close = () => setModal(null)
   const subtasks = process.subtasks ?? []
+  const subtaskCount = totalSubtaskCount ?? subtasks.length
+  const processId = process.taskId ?? 0
+
+  const invalidate = useInvalidateWbs(projectId)
+  const deleteTask = useDeleteTask({
+    mutation: {
+      onSuccess: async () => {
+        await invalidate()
+        close()
+      },
+    },
+  })
 
   return (
     <>
@@ -52,11 +72,20 @@ export function ProcessRow({
             </button>
             <button
               type="button"
-              onClick={() => setShowDetail(true)}
+              onClick={() => setModal('detail')}
               title={`${process.name} 상세 보기`}
-              className="truncate text-left text-sm font-semibold text-slate-800 cursor-pointer hover:text-blue-700 hover:underline"
+              className="min-w-0 flex-1 truncate text-left text-sm font-semibold text-slate-800 cursor-pointer hover:text-blue-700 hover:underline"
             >
               {process.name}
+            </button>
+            <button
+              type="button"
+              onClick={() => setModal('add-task')}
+              aria-label={`${process.name}에 작업 추가`}
+              title="세부 Task 추가"
+              className="shrink-0 rounded px-1.5 py-0.5 text-xs font-medium text-blue-600 opacity-0 hover:bg-blue-50 focus:opacity-100 group-hover:opacity-100"
+            >
+              + 작업
             </button>
           </div>
           {/* 담당 부서 — 공정 행은 비워둠 (기간 정보로 대체) */}
@@ -86,8 +115,44 @@ export function ProcessRow({
         </TimelineCell>
       </div>
 
-      {showDetail && (
-        <WbsItemDetailModal kind="process" process={process} onClose={() => setShowDetail(false)} />
+      {modal === 'detail' && (
+        <WbsItemDetailModal
+          kind="process"
+          process={process}
+          subtaskCount={subtaskCount}
+          onClose={close}
+          onEdit={() => setModal('edit')}
+          onDelete={() => setModal('delete')}
+        />
+      )}
+
+      {modal === 'add-task' && (
+        <TaskFormModal
+          projectId={projectId}
+          mode={{ type: 'create-subtask', parentId: processId, parentName: process.name ?? '' }}
+          onClose={close}
+        />
+      )}
+
+      {modal === 'edit' && (
+        <TaskFormModal
+          projectId={projectId}
+          mode={{ type: 'edit', kind: 'process', target: { taskId: processId, name: process.name ?? '', dept: process.dept, assignee: process.assignee } }}
+          onClose={close}
+        />
+      )}
+
+      {modal === 'delete' && (
+        <DeleteConfirmModal
+          title="공정 삭제"
+          targetName={process.name ?? ''}
+          details={<>계획 {formatDate(process.plannedStart)} ~ {formatDate(process.plannedEnd)}</>}
+          warning={subtaskCount > 0 ? `하위 세부 Task ${subtaskCount}건도 함께 삭제됩니다.` : undefined}
+          isPending={deleteTask.isPending}
+          error={deleteTask.error}
+          onConfirm={(reason) => deleteTask.mutate({ projectId, taskId: processId, data: { reason } })}
+          onClose={close}
+        />
       )}
 
       {/* 세부 Task */}

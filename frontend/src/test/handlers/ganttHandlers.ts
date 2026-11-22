@@ -30,4 +30,30 @@ export const ganttHandlers = [
       amount: null,
     })
   }),
+
+  // ---- 공정·Task 추가 / 수정 / 삭제 (백엔드 검증 규칙을 흉내 낸다) ----
+
+  http.post('/api/v1/projects/:projectId/tasks/processes', async ({ request }) => {
+    const body = await request.json() as { name: string }
+    return HttpResponse.json({ taskId: 900, projectId: 1, name: body.name, progress: 0, status: 'PENDING' }, { status: 201 })
+  }),
+
+  http.post('/api/v1/projects/:projectId/tasks/:parentId/subtasks', async ({ request, params }) => {
+    const body = await request.json() as { name: string }
+    return HttpResponse.json(
+      { taskId: 901, projectId: 1, parentId: Number(params.parentId), name: body.name, progress: 0, status: 'PENDING' },
+      { status: 201 },
+    )
+  }),
+
+  http.put('/api/v1/projects/:projectId/tasks/:taskId', async ({ request, params }) => {
+    const body = await request.json() as { name?: string; assignee?: string; reason?: string }
+    return HttpResponse.json({ taskId: Number(params.taskId), projectId: 1, ...body })
+  }),
+
+  http.delete('/api/v1/projects/:projectId/tasks/:taskId', async ({ request }) => {
+    const body = await request.json() as { reason?: string }
+    if (!body.reason) return HttpResponse.json({ detail: '삭제에는 사유가 필요합니다.' }, { status: 400 })
+    return new HttpResponse(null, { status: 204 })
+  }),
 ]

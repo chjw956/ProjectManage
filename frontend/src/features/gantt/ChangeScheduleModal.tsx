@@ -1,13 +1,21 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { z } from 'zod'
 import { useChangeSchedule } from '@/api/generated/task'
+import { toErrorMessage } from '@/lib/api-error'
+import { formatDate } from '@/lib/date'
+import { useInvalidateWbs } from './useInvalidateWbs'
 
-const schema = z.object({
-  plannedStart: z.string().min(1, '시작일을 입력하세요'),
-  plannedEnd: z.string().min(1, '종료일을 입력하세요'),
-  reason: z.string().min(1, '변경 사유를 입력하세요'),
-})
+const schema = z
+  .object({
+    plannedStart: z.string().min(1, '시작일을 입력하세요'),
+    plannedEnd: z.string().min(1, '종료일을 입력하세요'),
+    reason: z.string().trim().min(1, '변경 사유를 입력하세요'),
+  })
+  .refine((v) => v.plannedEnd >= v.plannedStart, {
+    message: '종료일은 시작일 이후여야 합니다',
+    path: ['plannedEnd'],
+  })
 
 type FormValues = z.infer<typeof schema>
 
@@ -26,15 +34,20 @@ export function ChangeScheduleModal({
   initialEnd,
   onClose,
 }: ChangeScheduleModalProps) {
-  const { mutate, isPending } = useChangeSchedule({
+  const invalidate = useInvalidateWbs(projectId)
+  const { mutate, isPending, error } = useChangeSchedule({
     mutation: {
-      onSuccess: () => onClose(),
+      onSuccess: async () => {
+        await invalidate()
+        onClose()
+      },
     },
   })
 
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -44,6 +57,8 @@ export function ChangeScheduleModal({
       reason: '',
     },
   })
+  const watchedStart = useWatch({ control, name: 'plannedStart' })
+  const watchedEnd = useWatch({ control, name: 'plannedEnd' })
 
   const onSubmit = (values: FormValues) => {
     mutate({
@@ -60,7 +75,14 @@ export function ChangeScheduleModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
       <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
-        <h2 className="mb-4 text-base font-semibold text-gray-900">계획 일정 변경</h2>
+        <h2 className="mb-2 text-base font-semibold text-gray-900">계획 일정 변경</h2>
+        <p data-testid="schedule-diff" className="mb-4 rounded-md bg-slate-50 px-3 py-2 text-xs text-slate-600">
+          {formatDate(initialStart)} ~ {formatDate(initialEnd)}
+          <span className="mx-1.5 text-slate-400">→</span>
+          <strong className="text-slate-800">
+            {formatDate(watchedStart || null)} ~ {formatDate(watchedEnd || null)}
+          </strong>
+        </p>
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
           <div className="space-y-3">
             <div>
@@ -107,6 +129,12 @@ export function ChangeScheduleModal({
               )}
             </div>
           </div>
+
+          {error != null && (
+            <p role="alert" className="mt-4 rounded-md bg-red-50 px-3 py-2 text-xs text-red-600">
+              {toErrorMessage(error)}
+            </p>
+          )}
 
           <div className="mt-5 flex justify-end gap-2">
             <button

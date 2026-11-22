@@ -14,9 +14,11 @@ interface GanttViewProps {
   milestones: MilestoneResponse[]
   projectId: number
   scale: 'week' | 'fit'
+  /** 공정 ID → 필터와 무관한 전체 세부 Task 수 */
+  subtaskCounts?: Record<number, number>
 }
 
-export function GanttView({ gantt, milestones, projectId, scale }: GanttViewProps) {
+export function GanttView({ gantt, milestones, projectId, scale, subtaskCounts }: GanttViewProps) {
   const processes = gantt.processes ?? []
   const allDates: (string | null)[] = processes.flatMap((p) => [
     p.plannedStart ?? null,
@@ -110,6 +112,7 @@ export function GanttView({ gantt, milestones, projectId, scale }: GanttViewProp
               todayOffset={todayOffset}
               leftW={LEFT_W}
               isLast={idx === processes.length - 1}
+              totalSubtaskCount={process.taskId != null ? subtaskCounts?.[process.taskId] : undefined}
             />
           ))}
         </div>

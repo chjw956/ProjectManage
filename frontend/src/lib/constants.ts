@@ -40,3 +40,20 @@ export const MILESTONE_COLOR: Record<string, string> = {
 }
 
 export const WEEK_COL_WIDTH_PX = 80
+
+/** 마일스톤 유형 → 표시명 (MilestoneBar 색상 키와 같은 값) */
+export const MILESTONE_TYPE_LABEL: Record<string, string> = {
+  REVIEW: '심의·검토',
+  REPORT: '보고',
+  SUBMIT: '제출',
+  DELIVERY: '납품',
+  ESTABLISH: '설립',
+  DECISION: '의사결정',
+}
+
+/** 마일스톤 상태 → 표시명 */
+export const MILESTONE_STATUS_LABEL: Record<string, string> = {
+  TODO: '예정',
+  IN_PROGRESS: '진행중',
+  DONE: '완료',
+}

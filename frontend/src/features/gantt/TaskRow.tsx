@@ -1,10 +1,15 @@
 import { useState } from 'react'
+import { useDeleteTask } from '@/api/generated/task'
 import { Badge } from '@/components/Badge'
 import type { GanttTaskRow } from '@/api/generated/model'
 import { GanttBar } from './GanttBar'
 import { ChangeScheduleModal } from './ChangeScheduleModal'
 import { WbsItemDetailModal } from './WbsItemDetailModal'
 import { TimelineCell } from './ProcessRow'
+import { TaskFormModal } from './TaskFormModal'
+import { DeleteConfirmModal } from './DeleteConfirmModal'
+import { useInvalidateWbs } from './useInvalidateWbs'
+import { formatDate } from '@/lib/date'
 
 interface TaskRowProps {
   task: GanttTaskRow
@@ -20,9 +25,20 @@ interface TaskRowProps {
 }
 
 export function TaskRow({ task, processName, projectId, rangeStart, scale, ticks, totalWidth, todayOffset, leftW, isLastInGroup }: TaskRowProps) {
-  const [showModal, setShowModal] = useState(false)
-  const [showDetail, setShowDetail] = useState(false)
+  const [modal, setModal] = useState<null | 'detail' | 'edit' | 'delete' | 'schedule'>(null)
+  const close = () => setModal(null)
   const delayed = task.delayed ?? false
+  const taskId = task.taskId ?? 0
+
+  const invalidate = useInvalidateWbs(projectId)
+  const deleteTask = useDeleteTask({
+    mutation: {
+      onSuccess: async () => {
+        await invalidate()
+        close()
+      },
+    },
+  })
 
   return (
     <>
@@ -38,7 +54,7 @@ export function TaskRow({ task, processName, projectId, rangeStart, scale, ticks
             )}
             <button
               type="button"
-              onClick={() => setShowDetail(true)}
+              onClick={() => setModal('detail')}
               title={`${task.name} 상세 보기`}
               className={`truncate text-left text-sm cursor-pointer hover:underline ${delayed ? 'text-red-700' : 'text-slate-700 hover:text-blue-700'}`}
             >
@@ -64,7 +80,7 @@ export function TaskRow({ task, processName, projectId, rangeStart, scale, ticks
           totalWidth={totalWidth}
           todayOffset={todayOffset}
         >
-          <div data-testid="gantt-bar-area" className="cursor-pointer h-full" onClick={() => setShowModal(true)}>
+          <div data-testid="gantt-bar-area" className="cursor-pointer h-full" onClick={() => setModal('schedule')}>
             <GanttBar
               plannedStart={task.plannedStart ?? null}
               plannedEnd={task.plannedEnd ?? null}
@@ -77,26 +93,45 @@ export function TaskRow({ task, processName, projectId, rangeStart, scale, ticks
         </TimelineCell>
       </div>
 
-      {showDetail && (
+      {modal === 'detail' && (
         <WbsItemDetailModal
           kind="task"
           task={task}
           processName={processName}
-          onClose={() => setShowDetail(false)}
-          onChangeSchedule={() => {
-            setShowDetail(false)
-            setShowModal(true)
-          }}
+          onClose={close}
+          onChangeSchedule={() => setModal('schedule')}
+          onEdit={() => setModal('edit')}
+          onDelete={() => setModal('delete')}
         />
       )}
 
-      {showModal && (
+      {modal === 'edit' && (
+        <TaskFormModal
+          projectId={projectId}
+          mode={{ type: 'edit', kind: 'task', target: { taskId, name: task.name ?? '', dept: task.dept, assignee: task.assignee } }}
+          onClose={close}
+        />
+      )}
+
+      {modal === 'delete' && (
+        <DeleteConfirmModal
+          title="세부 Task 삭제"
+          targetName={task.name ?? ''}
+          details={<>{processName && `${processName} · `}계획 {formatDate(task.plannedStart)} ~ {formatDate(task.plannedEnd)}</>}
+          isPending={deleteTask.isPending}
+          error={deleteTask.error}
+          onConfirm={(reason) => deleteTask.mutate({ projectId, taskId, data: { reason } })}
+          onClose={close}
+        />
+      )}
+
+      {modal === 'schedule' && (
         <ChangeScheduleModal
           projectId={projectId}
-          taskId={task.taskId ?? 0}
+          taskId={taskId}
           initialStart={task.plannedStart ?? null}
           initialEnd={task.plannedEnd ?? null}
-          onClose={() => setShowModal(false)}
+          onClose={close}
         />
       )}
     </>

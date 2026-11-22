@@ -1,14 +1,18 @@
+import { useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { useGetGantt } from '@/api/generated/gantt'
 import { useListMilestones } from '@/api/generated/milestone'
 import { Badge } from '@/components/Badge'
 import { GanttView } from '@/features/gantt/GanttView'
+import { MilestoneManageModal } from '@/features/gantt/MilestoneManageModal'
+import { TaskFormModal } from '@/features/gantt/TaskFormModal'
 import { WbsToolbar } from './WbsToolbar'
 
 export function WbsPage() {
   const { projectId: projectIdStr } = useParams<{ projectId: string }>()
   const projectId = Number(projectIdStr)
   const [searchParams] = useSearchParams()
+  const [modal, setModal] = useState<null | 'add-process' | 'milestones'>(null)
 
   const view         = (searchParams.get('view')      ?? 'gantt') as 'gantt' | 'list'
   const scale        = (searchParams.get('scale')     ?? 'week')  as 'week' | 'fit'
@@ -50,6 +54,10 @@ export function WbsPage() {
   const totalCount    = allProcesses.reduce((acc, p) => acc + (p.subtasks ?? []).length, 0)
   const filteredCount = filteredProcesses.reduce((acc, p) => acc + p.subtasks.length, 0)
   const filteredGantt = gantt ? { ...gantt, processes: filteredProcesses } : undefined
+  // 필터와 무관한 공정별 전체 세부 Task 수 (상세·삭제 경고용)
+  const subtaskCounts = Object.fromEntries(
+    allProcesses.map((p) => [p.taskId ?? 0, (p.subtasks ?? []).length]),
+  )
 
   // 부서 목록 (필터 드롭다운용)
   const depts = [...new Set(
@@ -106,16 +114,50 @@ export function WbsPage() {
           </div>
           <div className="flex items-center gap-2 text-xs text-slate-500">
             <span>마일스톤 <strong className="text-slate-700">{milestones.length}</strong>개</span>
+            <button
+              type="button"
+              onClick={() => setModal('milestones')}
+              className="rounded-lg border border-slate-300 px-3 py-1.5 font-medium text-slate-600 hover:bg-slate-50"
+            >
+              마일스톤 관리
+            </button>
+            <button
+              type="button"
+              onClick={() => setModal('add-process')}
+              className="rounded-lg bg-blue-600 px-3 py-1.5 font-medium text-white hover:bg-blue-700"
+            >
+              + 공정
+            </button>
           </div>
         </div>
       </header>
+
+      {modal === 'add-process' && (
+        <TaskFormModal projectId={projectId} mode={{ type: 'create-process' }} onClose={() => setModal(null)} />
+      )}
+      {modal === 'milestones' && (
+        <MilestoneManageModal projectId={projectId} milestones={milestones} onClose={() => setModal(null)} />
+      )}
 
       {/* 툴바 */}
       <WbsToolbar totalCount={totalCount} filteredCount={filteredCount} depts={depts} />
 
       {/* 본문 */}
       <div className="flex-1 overflow-hidden">
-        {filteredProcesses.length === 0 ? (
+        {allProcesses.length === 0 ? (
+          <div className="flex items-center justify-center h-full text-slate-400">
+            <div className="text-center">
+              <p className="font-medium">등록된 공정이 없습니다</p>
+              <button
+                type="button"
+                onClick={() => setModal('add-process')}
+                className="mt-3 rounded-lg border border-blue-200 px-3 py-1.5 text-sm font-medium text-blue-600 hover:bg-blue-50"
+              >
+                첫 공정 추가하기
+              </button>
+            </div>
+          </div>
+        ) : filteredProcesses.length === 0 ? (
           <div className="flex items-center justify-center h-full text-slate-400">
             <div className="text-center">
               <svg width="40" height="40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1} className="mx-auto mb-3">
@@ -192,6 +234,7 @@ export function WbsPage() {
               milestones={milestones}
               projectId={projectId}
               scale={scale}
+              subtaskCounts={subtaskCounts}
             />
           )
         )}

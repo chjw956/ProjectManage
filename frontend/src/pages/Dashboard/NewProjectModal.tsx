@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { isAxiosError } from 'axios'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
+import { toErrorMessage } from '@/lib/api-error'
 import { useCreateProject } from './api'
 
 const schema = z
@@ -26,13 +26,6 @@ const schema = z
 
 type FormValues = z.infer<typeof schema>
 
-/** 서버 ProblemDetail의 detail을 우선 표시한다. */
-function toErrorMessage(error: unknown): string {
-  if (isAxiosError<{ detail?: string }>(error) && error.response?.data?.detail) {
-    return error.response.data.detail
-  }
-  return '등록하지 못했습니다. 잠시 후 다시 시도하세요.'
-}
 
 interface NewProjectModalProps {
   onClose: () => void
@@ -40,7 +33,7 @@ interface NewProjectModalProps {
 
 export function NewProjectModal({ onClose }: NewProjectModalProps) {
   const { mutate, isPending, error } = useCreateProject()
-  const serverError = error ? toErrorMessage(error) : null
+  const serverError = error ? toErrorMessage(error, '등록하지 못했습니다. 잠시 후 다시 시도하세요.') : null
 
   const {
     register,
