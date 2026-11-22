@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -56,6 +57,7 @@ public class TaskService {
     @Transactional
     public Task createProcess(Long projectId, String name, String dept, String assignee,
                               LocalDate plannedStart, LocalDate plannedEnd) {
+        validatePeriod(plannedStart, plannedEnd);
         accessChecker.checkWrite(projectId);
         Task task = new Task();
         task.setProject(projectRepo.getReferenceById(projectId));
@@ -71,6 +73,7 @@ public class TaskService {
     @Transactional
     public Task createSubTask(Long projectId, Long parentId, String name, String dept,
                               String assignee, LocalDate plannedStart, LocalDate plannedEnd) {
+        validatePeriod(plannedStart, plannedEnd);
         accessChecker.checkWrite(projectId);
         Task parent = taskRepo.findById(parentId)
             .filter(t -> t.getProject().getProjectId().equals(projectId))
@@ -91,15 +94,52 @@ public class TaskService {
     // 수정 — 이력 없음
     // -------------------------------------------------------------------------
 
+    /**
+     * 기본 정보 수정. 이름·부서는 사유 없이 바꾼다.
+     * 담당자가 실제로 바뀌면 사유 필수 + MEMBER_CHANGED 이벤트 기록 (history-logging 스킬).
+     * 빈 문자열은 "지정 안 함"(null)으로 저장한다.
+     */
     @Transactional
     public Task updateTask(Long projectId, Long taskId,
-                           String name, String dept, String assignee) {
+                           String name, String dept, String assignee, String reason) {
         accessChecker.checkWrite(projectId);
         Task task = loadTask(projectId, taskId);
-        if (name != null)     task.setName(name);
-        if (dept != null)     task.setDept(dept);
-        if (assignee != null) task.setAssignee(assignee);
-        return taskRepo.save(task);
+
+        String newAssignee = assignee == null ? task.getAssignee() : blankToNull(assignee);
+        String oldAssignee = task.getAssignee();
+        boolean assigneeChanged = !Objects.equals(oldAssignee, newAssignee);
+        if (assigneeChanged && (reason == null || reason.isBlank())) {
+            throw new IllegalArgumentException("담당자 변경에는 사유가 필요합니다.");
+        }
+
+        if (name != null && !name.isBlank()) task.setName(name.strip());
+        if (dept != null)                    task.setDept(blankToNull(dept));
+        task.setAssignee(newAssignee);
+        taskRepo.save(task);
+
+        if (assigneeChanged) {
+            recorder.record(projectId, "MEMBER_CHANGED",
+                task.getName() + " 담당자: " + display(oldAssignee) + " → " + display(newAssignee),
+                Collections.singletonMap("assignee", oldAssignee),
+                Collections.singletonMap("assignee", newAssignee),
+                reason, "TASK", taskId);
+        }
+        return task;
+    }
+
+    private static String blankToNull(String s) {
+        return s == null || s.isBlank() ? null : s.strip();
+    }
+
+    private static String display(String s) {
+        return s == null ? "미지정" : s;
+    }
+
+    /** 계획 기간 검증: 종료일이 시작일보다 앞설 수 없다 (400). */
+    private static void validatePeriod(LocalDate start, LocalDate end) {
+        if (start != null && end != null && end.isBefore(start)) {
+            throw new IllegalArgumentException("종료일은 시작일 이후여야 합니다.");
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -128,6 +168,7 @@ public class TaskService {
         if (reason == null || reason.isBlank()) {
             throw new IllegalArgumentException("일정 변경에는 사유가 필요합니다.");
         }
+        validatePeriod(plannedStart, plannedEnd);
         accessChecker.checkWrite(projectId);
         Task task = loadTask(projectId, taskId);
         var before = new ScheduleSnapshot(task.getPlannedStart(), task.getPlannedEnd());

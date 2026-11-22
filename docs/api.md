@@ -204,6 +204,77 @@ Base URL: `/api/v1`
 | `status` | `TODO` \| `IN_PROGRESS` \| `DONE` | 상태 |
 | `dDay` | number | D-day (음수=남은 일수, 양수=초과일수, 0=당일) |
 
+
+### POST /api/v1/projects/{projectId}/milestones
+마일스톤 생성.
+
+| 필드 | 타입 | 필수 | 설명 |
+|------|------|------|------|
+| `name` | string | ✓ | 명칭 |
+| `type` | string | | 유형 (`REVIEW`, `REPORT`, `SUBMIT`, `DELIVERY`, `ESTABLISH`, `DECISION`) |
+| `plannedDate` | string (ISO date) | ✓ | 계획일 |
+
+**응답 `201 Created`**: 마일스톤 목록 항목과 같은 형식 · **`400`**: 명칭·계획일 누락
+
+### PUT /api/v1/projects/{projectId}/milestones/{milestoneId}
+마일스톤 수정. 보내지 않은(null) 필드는 바꾸지 않는다.
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| `name` | string (필수) | 명칭 |
+| `type` | string | 유형 |
+| `plannedDate` | string (ISO date) | 계획일. **값이 바뀌면 `reason` 필수**, 타임라인 `SCHEDULE_CHANGED` 기록 |
+| `actualDate` | string (ISO date) | 실제일 |
+| `status` | `TODO` \| `IN_PROGRESS` \| `DONE` | 상태 |
+| `reason` | string | 변경 사유 |
+
+**응답 `200 OK`** · **`400`**: 계획일 변경인데 사유 없음
+
+### DELETE /api/v1/projects/{projectId}/milestones/{milestoneId}
+마일스톤 삭제. 요청 본문 `{ "reason": "..." }` 필수. 타임라인 `MILESTONE_DELETED` 기록.
+
+**응답 `204 No Content`** · **`400`**: 사유 없음
+
+---
+
+## WBS (공정·세부 Task)
+
+공정은 `parentId`가 없는 Task, 세부 Task는 공정을 `parentId`로 가진다.
+
+### POST /api/v1/projects/{projectId}/tasks/processes
+### POST /api/v1/projects/{projectId}/tasks/{parentId}/subtasks
+공정 / 세부 Task 생성. 생성은 사유가 필요 없고 타임라인에 기록하지 않는다.
+
+| 필드 | 타입 | 필수 | 설명 |
+|------|------|------|------|
+| `name` | string | ✓ | 이름 |
+| `dept` | string | | 담당 부서 |
+| `assignee` | string | | 담당자 |
+| `plannedStart` | string (ISO date) | | 계획 시작일 |
+| `plannedEnd` | string (ISO date) | | 계획 종료일 (시작일 이후) |
+
+**응답 `201 Created`** · **`400`**: 이름 누락, 종료일 &lt; 시작일 · **`404`**: 다른 사업의 공정 ID
+
+### PUT /api/v1/projects/{projectId}/tasks/{taskId}
+기본 정보(이름·부서·담당자) 수정. 계획 일정은 `PATCH .../schedule`(사유 필수)로 바꾼다.
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| `name` | string | 이름 (null·빈 값이면 유지) |
+| `dept` | string | 담당 부서 (null이면 유지, 빈 문자열이면 비움) |
+| `assignee` | string | 담당자 (null이면 유지, 빈 문자열이면 미지정) |
+| `reason` | string | **담당자가 실제로 바뀌면 필수**. 타임라인 `MEMBER_CHANGED` 기록 (`업무명 담당자: A → B`) |
+
+**응답 `200 OK`** · **`400`**: 담당자 변경인데 사유 없음
+
+### PATCH /api/v1/projects/{projectId}/tasks/{taskId}/schedule
+계획 일정 변경. `{ "plannedStart", "plannedEnd", "reason" }` — 사유 필수, 종료일은 시작일 이후. 타임라인 `SCHEDULE_CHANGED` 기록.
+
+### DELETE /api/v1/projects/{projectId}/tasks/{taskId}
+공정·세부 Task 삭제. 요청 본문 `{ "reason": "..." }` 필수. **공정을 삭제하면 하위 세부 Task도 함께 삭제**되고, 타임라인 `TASK_DELETED`는 최상위 1건만 기록한다.
+
+**응답 `204 No Content`** · **`400`**: 사유 없음
+
 ---
 
 ## 이슈 (Issue)

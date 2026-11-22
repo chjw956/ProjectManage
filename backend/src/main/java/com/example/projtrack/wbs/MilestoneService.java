@@ -34,6 +34,9 @@ public class MilestoneService {
 
     @Transactional
     public Milestone create(Long projectId, String name, String type, LocalDate plannedDate) {
+        if (plannedDate == null) {
+            throw new IllegalArgumentException("마일스톤 계획일을 입력하세요.");
+        }
         accessChecker.checkWrite(projectId);
         Milestone m = new Milestone();
         m.setProject(projectRepo.getReferenceById(projectId));

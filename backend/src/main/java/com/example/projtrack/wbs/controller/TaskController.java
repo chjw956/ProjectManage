@@ -75,13 +75,13 @@ public class TaskController {
     // 수정 — 이력 없음
     // -------------------------------------------------------------------------
 
-    @Operation(summary = "Task 기본 정보 수정 (이름·부서·담당자)")
+    @Operation(summary = "Task 기본 정보 수정 (이름·부서·담당자, 담당자 변경 시 사유 필수)")
     @PutMapping("/{taskId}")
     public TaskResponse updateTask(@PathVariable Long projectId,
                                    @PathVariable Long taskId,
                                    @RequestBody @Valid UpdateTaskRequest req) {
         Task task = taskService.updateTask(projectId, taskId,
-            req.name(), req.dept(), req.assignee());
+            req.name(), req.dept(), req.assignee(), req.reason());
         return toResponse(task);
     }
 

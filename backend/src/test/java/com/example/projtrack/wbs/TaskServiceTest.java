@@ -64,6 +64,119 @@ class TaskServiceTest {
         assertThat(p3.getSortOrder()).isEqualTo(3);
     }
 
+    @Test
+    @Transactional
+    @DisplayName("공정·세부 Task 생성: 종료일 < 시작일 → IllegalArgumentException(400), 저장 안 됨")
+    void create_endBeforeStart_throws() {
+        Project p = savedProject();
+        LocalDate start = LocalDate.of(2026, 3, 10);
+        LocalDate end   = LocalDate.of(2026, 3, 1);
+
+        assertThatThrownBy(() -> taskService.createProcess(p.getProjectId(), "역순 공정", null, null, start, end))
+            .isInstanceOf(IllegalArgumentException.class);
+
+        Task proc = taskService.createProcess(p.getProjectId(), "정상 공정", null, null, null, null);
+        assertThatThrownBy(() -> taskService.createSubTask(p.getProjectId(), proc.getTaskId(),
+                "역순 Task", null, null, start, end))
+            .isInstanceOf(IllegalArgumentException.class);
+
+        assertThat(taskRepo.findByProjectProjectIdOrderBySortOrderAsc(p.getProjectId()))
+            .extracting(Task::getName).containsExactly("정상 공정");
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("일정 변경: 종료일 < 시작일 → IllegalArgumentException, 이벤트 없음")
+    void changeSchedule_endBeforeStart_throws() {
+        Project p = savedProject();
+        Task task = taskService.createProcess(p.getProjectId(), "작업", null, null, null, null);
+
+        assertThatThrownBy(() -> taskService.changeSchedule(p.getProjectId(), task.getTaskId(),
+                LocalDate.of(2026, 3, 10), LocalDate.of(2026, 3, 1), "사유"))
+            .isInstanceOf(IllegalArgumentException.class);
+        assertThat(events(p)).isEmpty();
+    }
+
+    // =========================================================================
+    // updateTask — 담당자 변경은 사유 필수 + MEMBER_CHANGED
+    // =========================================================================
+
+    @Test
+    @Transactional
+    @DisplayName("updateTask: 이름·부서만 변경 → 사유 없이 성공, 이벤트 없음")
+    void updateTask_nameAndDept_noReason() {
+        Project p = savedProject();
+        Task task = taskService.createProcess(p.getProjectId(), "옛 이름", "옛 부서", "담당자A", null, null);
+
+        Task updated = taskService.updateTask(p.getProjectId(), task.getTaskId(), "새 이름", "새 부서", "담당자A", null);
+        em.flush();
+
+        assertThat(updated.getName()).isEqualTo("새 이름");
+        assertThat(updated.getDept()).isEqualTo("새 부서");
+        assertThat(events(p)).isEmpty();
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("updateTask: 담당자 변경, 사유 없음 → IllegalArgumentException, 값 그대로")
+    void updateTask_assigneeChange_noReason_throws() {
+        Project p = savedProject();
+        Task task = taskService.createProcess(p.getProjectId(), "작업", null, "담당자A", null, null);
+
+        assertThatThrownBy(() -> taskService.updateTask(p.getProjectId(), task.getTaskId(), null, null, "담당자B", " "))
+            .isInstanceOf(IllegalArgumentException.class);
+        assertThat(taskRepo.findById(task.getTaskId()).orElseThrow().getAssignee()).isEqualTo("담당자A");
+        assertThat(events(p)).isEmpty();
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("updateTask: 담당자 변경 + 사유 → MEMBER_CHANGED 1건, before/after·사유 기록")
+    void updateTask_assigneeChange_recordsEvent() {
+        Project p = savedProject();
+        Task task = taskService.createProcess(p.getProjectId(), "작업", null, "담당자A", null, null);
+
+        taskService.updateTask(p.getProjectId(), task.getTaskId(), null, null, "담당자B", "인사 이동");
+        em.flush();
+
+        var events = events(p);
+        assertThat(events).singleElement().satisfies(e -> {
+            assertThat(e.getType()).isEqualTo("MEMBER_CHANGED");
+            assertThat(e.getSummary()).isEqualTo("작업 담당자: 담당자A → 담당자B");
+            assertThat(e.getBeforeState()).contains("담당자A");
+            assertThat(e.getAfterState()).contains("담당자B");
+            assertThat(e.getReason()).isEqualTo("인사 이동");
+        });
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("updateTask: 담당자 비우기(빈 문자열) → 미지정으로 변경, 사유 필수")
+    void updateTask_clearAssignee() {
+        Project p = savedProject();
+        Task task = taskService.createProcess(p.getProjectId(), "작업", null, "담당자A", null, null);
+
+        Task updated = taskService.updateTask(p.getProjectId(), task.getTaskId(), null, null, "", "담당 해제");
+        em.flush();
+
+        assertThat(updated.getAssignee()).isNull();
+        assertThat(events(p)).singleElement()
+            .satisfies(e -> assertThat(e.getSummary()).isEqualTo("작업 담당자: 담당자A → 미지정"));
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("updateTask: 같은 담당자로 저장 → 사유 없어도 성공, 이벤트 없음")
+    void updateTask_sameAssignee_noEvent() {
+        Project p = savedProject();
+        Task task = taskService.createProcess(p.getProjectId(), "작업", null, "담당자A", null, null);
+
+        taskService.updateTask(p.getProjectId(), task.getTaskId(), null, null, "담당자A", null);
+        em.flush();
+
+        assertThat(events(p)).isEmpty();
+    }
+
     // =========================================================================
     // reorder
     // =========================================================================
@@ -223,6 +336,10 @@ class TaskServiceTest {
     // =========================================================================
     // 헬퍼
     // =========================================================================
+
+    private List<com.example.projtrack.history.domain.TimelineEvent> events(Project p) {
+        return eventRepo.findByProjectProjectIdOrderByEventDateDesc(p.getProjectId(), Pageable.unpaged());
+    }
 
     private Project savedProject() {
         Project p = new Project();
