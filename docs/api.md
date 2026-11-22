@@ -204,3 +204,54 @@ Base URL: `/api/v1`
 | `status` | `TODO` \| `IN_PROGRESS` \| `DONE` | 상태 |
 | `dDay` | number | D-day (음수=남은 일수, 양수=초과일수, 0=당일) |
 
+---
+
+## 이슈 (Issue)
+
+### GET /api/v1/projects/{projectId}/issues?status=open
+사업의 열린 이슈 목록 조회 (조회 전용). 대시보드 카드·사업 홈의 "열린 이슈" 모달에서 사용한다.
+
+**쿼리 파라미터**
+
+| 파라미터 | 타입 | 설명 |
+|----------|------|------|
+| `status` | `open` | `open`: CLOSED를 제외한 이슈(OPEN, IN_PROGRESS). `openIssueCount`와 같은 기준. 현재 `open`만 지원 |
+
+**정렬**: 등급(HIGH → MID → LOW) → 목표일 빠른 순(미정은 뒤로) → 발생일 빠른 순
+
+**응답 `200 OK`**
+```json
+[
+  {
+    "issueId": 1,
+    "title": "보안 감사 요건 추가 — 개인정보 처리 방침 반영 필요",
+    "grade": "HIGH",
+    "status": "OPEN",
+    "assignee": "김민준",
+    "occurredAt": "2026-11-10",
+    "targetDate": "2026-12-15",
+    "response": "법무팀 협의 진행 중.",
+    "overdue": false
+  }
+]
+```
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| `issueId` | number | 이슈 ID |
+| `title` | string | 이슈명 |
+| `grade` | `HIGH` \| `MID` \| `LOW` | 등급 (상·중·하) |
+| `status` | `OPEN` \| `IN_PROGRESS` | 상태 |
+| `assignee` | string \| null | 담당자 |
+| `occurredAt` | string (ISO date) | 발생일 |
+| `targetDate` | string (ISO date) \| null | 목표 해결일 |
+| `response` | string \| null | 대응 방안 |
+| `overdue` | boolean | 목표일이 오늘보다 이전이면 `true` (서버에서 계산, 목표일 미정이면 `false`) |
+
+**오류 응답**
+
+| 코드 | 설명 |
+|------|------|
+| `400 Bad Request` | 지원하지 않는 `status` 값 |
+| `403 Forbidden` | 사업 조회 권한 없음 |
+| `404 Not Found` | 존재하지 않는 사업 ID |

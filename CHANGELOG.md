@@ -15,6 +15,12 @@
   - `POST /api/v1/projects`에 `evidenceFolderLabel`, `evidenceFolderPath` 필드 추가. 경로가 있으면 폴더 이름 필수
   - 사업과 폴더를 같은 트랜잭션으로 등록하고, 폴더 등록이 실패하면 사업 등록도 롤백
   - 등록 실패 시 서버 오류 메시지를 모달에 표시
+- **열린 이슈 모달**: 대시보드 카드의 "열린 이슈 N건"과 사업 홈의 "열린 이슈" 카드를 누르면 이슈 목록 모달 표시
+  - 이슈 조회 API `GET /api/v1/projects/{projectId}/issues?status=open` (CLOSED 제외, 조회 전용)
+  - 정렬: 등급(상→중→하) → 목표일 빠른 순(미정은 뒤) → 발생일 순
+  - 목표일 경과 여부(`overdue`)를 서버에서 계산해 "기한 초과"로 표시
+  - 이슈 0건이면 버튼 비활성화
+  - 공용 컴포넌트 `features/issue-register/OpenIssuesModal`
 
 ### 변경
 - NAS 경로가 허용 루트 밖일 때 응답을 `403 Forbidden` → `400 Bad Request`로 변경 (`InvalidNasPathException`). 폴더 등록·수정·파일 조회 API 모두 해당

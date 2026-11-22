@@ -1,8 +1,10 @@
+import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useGetHome } from '@/api/generated/project'
 import { useListMilestones } from '@/api/generated/milestone'
 import { displayDDay, formatDate } from '@/lib/date'
 import type { MilestoneResponse } from '@/api/generated/model'
+import { OpenIssuesModal } from '@/features/issue-register/OpenIssuesModal'
 
 const SIGNAL_STYLE = {
   DANGER:  { dot: 'bg-red-500',     badge: 'bg-red-50 text-red-700 border-red-200',         label: '위험', banner: 'bg-red-50 border-red-200 text-red-800' },
@@ -69,6 +71,7 @@ export function ProjectHome() {
 
   const { data: home, isLoading: homeLoading, isError: homeError } = useGetHome(projectId)
   const { data: milestones = [], isLoading: msLoading } = useListMilestones(projectId)
+  const [issuesOpen, setIssuesOpen] = useState(false)
 
   if (homeLoading || msLoading) {
     return (
@@ -92,9 +95,14 @@ export function ProjectHome() {
   const showBanner = signalKey === 'CAUTION' || signalKey === 'DANGER'
   const reasons = home.statusSignal?.reasons ?? []
   const recentEvents = (home.recentEvents ?? []).slice(0, 5)
+  const issueCount = home.openIssueCount ?? 0
 
   return (
     <div className="flex flex-col min-h-0">
+      {issuesOpen && (
+        <OpenIssuesModal projectId={projectId} projectName={home.name} onClose={() => setIssuesOpen(false)} />
+      )}
+
       {/* 헤더 */}
       <div className="bg-white border-b border-slate-200 px-6 py-4">
         <div className="flex items-center gap-2 text-xs text-slate-500 mb-2">
@@ -168,13 +176,22 @@ export function ProjectHome() {
             </p>
           </div>
 
-          <div className="bg-white rounded-xl border border-slate-200 p-5">
-            <p className="text-xs text-slate-500 mb-2">열린 이슈</p>
-            <p className={`text-2xl font-bold ${(home.openIssueCount ?? 0) > 0 ? 'text-orange-500' : 'text-slate-900'}`}>
-              {home.openIssueCount ?? 0}
+          <button
+            type="button"
+            onClick={() => setIssuesOpen(true)}
+            disabled={issueCount === 0}
+            aria-label={`열린 이슈 ${issueCount}건 보기`}
+            className="bg-white rounded-xl border border-slate-200 p-5 text-left transition-colors enabled:hover:border-slate-300 enabled:hover:shadow-sm disabled:cursor-default"
+          >
+            <p className="text-xs text-slate-500 mb-2 flex items-center justify-between">
+              열린 이슈
+              {issueCount > 0 && <span className="text-slate-400">목록 보기 ›</span>}
+            </p>
+            <p className={`text-2xl font-bold ${issueCount > 0 ? 'text-orange-500' : 'text-slate-900'}`}>
+              {issueCount}
               <span className="text-sm font-normal text-slate-500 ml-1">건</span>
             </p>
-          </div>
+          </button>
         </div>
 
         {/* 마일스톤 타임라인 */}

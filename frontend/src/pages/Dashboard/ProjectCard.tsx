@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { OpenIssuesModal } from '@/features/issue-register/OpenIssuesModal'
 import { displayDDay, formatDate } from '@/lib/date'
 import type { ProjectSummaryResponse } from '@/api/generated/model'
 
@@ -24,6 +26,8 @@ export function ProjectCard({ project }: ProjectCardProps) {
   const signalKey = (statusSignal?.status ?? 'NORMAL') as keyof typeof SIGNAL_STYLE
   const signal = SIGNAL_STYLE[signalKey]
   const typeLabel = (type ?? 'INTERNAL') === 'GOV' ? '정부' : '사내'
+  const [issuesOpen, setIssuesOpen] = useState(false)
+  const issueCount = openIssueCount ?? 0
 
   return (
     <div className={`bg-white rounded-xl border border-slate-200 border-l-4 ${BORDER_LEFT[signalKey]} shadow-sm hover:shadow-md transition-shadow flex flex-col`}>
@@ -98,17 +102,23 @@ export function ProjectCard({ project }: ProjectCardProps) {
 
       {/* 푸터 */}
       <div className="px-5 py-3 border-t border-slate-100 bg-slate-50 rounded-b-xl flex items-center justify-between">
-        <div className="flex items-center gap-1 text-xs text-slate-500">
+        <button
+          type="button"
+          onClick={() => setIssuesOpen(true)}
+          disabled={issueCount === 0}
+          aria-label={`열린 이슈 ${issueCount}건 보기`}
+          className="flex items-center gap-1 rounded text-xs text-slate-500 hover:text-slate-800 hover:underline disabled:cursor-default disabled:no-underline disabled:hover:text-slate-500"
+        >
           <svg width="13" height="13" viewBox="0 0 13 13" fill="none" className="text-slate-400">
             <circle cx="6.5" cy="6.5" r="5.5" stroke="currentColor" strokeWidth="1.2" />
             <path d="M6.5 3.5V6.5L8.5 8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
           </svg>
           열린 이슈{' '}
-          <span className={`font-bold ${(openIssueCount ?? 0) > 0 ? 'text-orange-500' : 'text-slate-700'}`}>
-            {openIssueCount ?? 0}
+          <span className={`font-bold ${issueCount > 0 ? 'text-orange-500' : 'text-slate-700'}`}>
+            {issueCount}
           </span>
           건
-        </div>
+        </button>
         <div className="flex items-center gap-3">
           <Link
             to={`/projects/${projectId}/home`}
@@ -130,6 +140,10 @@ export function ProjectCard({ project }: ProjectCardProps) {
           </Link>
         </div>
       </div>
+
+      {issuesOpen && projectId != null && (
+        <OpenIssuesModal projectId={projectId} projectName={name} onClose={() => setIssuesOpen(false)} />
+      )}
     </div>
   )
 }

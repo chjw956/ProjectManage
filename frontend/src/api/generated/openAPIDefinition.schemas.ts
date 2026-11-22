@@ -188,3 +188,20 @@ export interface DeleteRequest {
   reason: string;
 }
 
+
+export interface IssueResponse {
+  issueId?: number;
+  title?: string;
+  grade?: string;
+  status?: string;
+  assignee?: string;
+  occurredAt?: string;
+  targetDate?: string;
+  response?: string;
+  overdue?: boolean;
+}
+
+export type ListIssuesParams = {
+  /** 현재 open만 지원 */
+  status?: string;
+};

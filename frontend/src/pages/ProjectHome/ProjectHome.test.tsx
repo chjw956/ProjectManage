@@ -1,8 +1,10 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { HttpResponse, http } from 'msw'
 import { server } from '@/test/setup'
+import { projectHomeFixture } from '@/test/fixtures/projectHome'
 import { ProjectHome } from './index'
 
 function renderProjectHome(projectId = 1) {
@@ -78,5 +80,27 @@ describe('ProjectHome', () => {
     await waitFor(() => {
       expect(screen.getByText(/사업 홈 데이터를 불러오지 못했습니다/)).toBeInTheDocument()
     })
+  })
+
+  // ---- 열린 이슈 모달 ----
+
+  it('"열린 이슈" 카드를 누르면 이슈 모달이 열리고 Esc로 닫힌다', async () => {
+    const user = userEvent.setup()
+    renderProjectHome()
+    await user.click(await screen.findByRole('button', { name: '열린 이슈 2건 보기' }))
+    const dialog = await screen.findByRole('dialog')
+    expect(await within(dialog).findByText('가상 보안 요건 추가 대응')).toBeInTheDocument()
+    await user.keyboard('{Escape}')
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('열린 이슈가 0건이면 카드 버튼이 비활성화된다', async () => {
+    server.use(
+      http.get('/api/v1/projects/:projectId', () =>
+        HttpResponse.json({ ...projectHomeFixture, openIssueCount: 0 }),
+      ),
+    )
+    renderProjectHome()
+    expect(await screen.findByRole('button', { name: '열린 이슈 0건 보기' })).toBeDisabled()
   })
 })

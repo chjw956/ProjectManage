@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { HttpResponse, http } from 'msw'
@@ -197,5 +197,22 @@ describe('Dashboard', () => {
     await user.click(screen.getByRole('button', { name: '등록' }))
     expect(await screen.findByRole('alert')).toHaveTextContent('허용되지 않은 NAS 경로입니다: /etc/x')
     expect(screen.getByRole('heading', { name: '새 프로젝트 등록' })).toBeInTheDocument()
+  })
+
+  // ---- 열린 이슈 모달 ----
+
+  it('카드의 "열린 이슈 N건"을 누르면 이슈 모달이 열리고 목록이 표시된다', async () => {
+    const user = userEvent.setup()
+    renderDashboard()
+    await user.click(await screen.findByRole('button', { name: '열린 이슈 2건 보기' }))
+    const dialog = await screen.findByRole('dialog')
+    expect(within(dialog).getByText('스마트 팩토리 구축 사업')).toBeInTheDocument()
+    expect(await within(dialog).findByText('가상 보안 요건 추가 대응')).toBeInTheDocument()
+  })
+
+  it('열린 이슈가 0건인 카드는 버튼이 비활성화된다', async () => {
+    renderDashboard()
+    const zeroButtons = await screen.findAllByRole('button', { name: '열린 이슈 0건 보기' })
+    zeroButtons.forEach((b) => expect(b).toBeDisabled())
   })
 })
