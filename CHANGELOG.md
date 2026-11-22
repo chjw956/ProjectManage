@@ -10,6 +10,10 @@
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-22
+
+WBS·간트 화면에서 공정·Task·마일스톤 일정 관리, 담당자 변경 사유 필수화.
+
 ### 추가
 - **WBS·간트 화면에서 일정 관리**
   - 공정 추가(헤더 "+ 공정", 공정이 없을 때 "첫 공정 추가하기"), 세부 Task 추가(공정 행 "+ 작업")
@@ -96,7 +100,8 @@
 - **API 문서**: springdoc-openapi Swagger UI (`/swagger-ui.html`)
 - **문서**: 설계서 `docs/design.md`, 슬라이스 계획 `docs/plans/slice-01-project-wbs.md`, 화면 참고 이미지 `docs/screens/`
 
-[Unreleased]: https://github.com/chjw956/ProjectManage/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/chjw956/ProjectManage/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/chjw956/ProjectManage/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/chjw956/ProjectManage/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/chjw956/ProjectManage/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/chjw956/ProjectManage/releases/tag/v0.1.0
