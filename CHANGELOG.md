@@ -10,6 +10,10 @@
 
 ## [Unreleased]
 
+## [0.4.2] - 2026-11-22
+
+NAS 파일(xlsx·docx 등)이 OnlyOffice에서 열리지 않던 문제 수정.
+
 ### 수정
 - **NAS 파일(xlsx·docx 등)이 웹에서 열리지 않고 "파일을 불러오는 중..."에 멈추던 문제**
   - OnlyOffice API 스크립트 로드 경쟁 조건: 개발 모드(StrictMode)의 effect 2회 실행 시 두 번째 실행이 로드 완료 전에 통과해 에디터를 만들지 않았음 → 공용 로더(`pages/NasFiles/docsApi.ts`)로 로드 완료까지 대기
@@ -127,7 +131,8 @@ WBS·간트 화면에서 공정·Task·마일스톤 일정 관리, 담당자 변
 - **API 문서**: springdoc-openapi Swagger UI (`/swagger-ui.html`)
 - **문서**: 설계서 `docs/design.md`, 슬라이스 계획 `docs/plans/slice-01-project-wbs.md`, 화면 참고 이미지 `docs/screens/`
 
-[Unreleased]: https://github.com/chjw956/ProjectManage/compare/v0.4.1...HEAD
+[Unreleased]: https://github.com/chjw956/ProjectManage/compare/v0.4.2...HEAD
+[0.4.2]: https://github.com/chjw956/ProjectManage/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/chjw956/ProjectManage/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/chjw956/ProjectManage/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/chjw956/ProjectManage/compare/v0.2.0...v0.3.0
