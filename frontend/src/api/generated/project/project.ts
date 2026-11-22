@@ -5,27 +5,34 @@
  * OpenAPI spec version: v0
  */
 import {
+  useMutation,
   useQuery
 } from '@tanstack/react-query';
 import type {
   DataTag,
   DefinedInitialDataOptions,
   DefinedUseQueryResult,
+  MutationFunction,
   QueryClient,
   QueryFunction,
   QueryKey,
   UndefinedInitialDataOptions,
+  UseMutationOptions,
+  UseMutationResult,
   UseQueryOptions,
   UseQueryResult
 } from '@tanstack/react-query';
 
 import type {
+  CreateProjectRequest,
   ProjectHomeResponse,
   ProjectSummaryResponse
 } from '../openAPIDefinition.schemas';
 
 import { axiosInstance } from '../../axios-instance';
 
+
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 
@@ -49,14 +56,14 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
  */
 export const listProjects = (
 
- signal?: AbortSignal
+ options?: SecondParameter<typeof axiosInstance>,signal?: AbortSignal
 ) => {
 
 
       return axiosInstance<ProjectSummaryResponse[]>(
       {url: `/api/v1/projects`, method: 'GET', signal
     },
-      );
+      options);
     }
 
 
@@ -69,16 +76,16 @@ export const getListProjectsQueryKey = () => {
     }
 
 
-export const getListProjectsQueryOptions = <TData = Awaited<ReturnType<typeof listProjects>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProjects>>, TError, TData>>, }
+export const getListProjectsQueryOptions = <TData = Awaited<ReturnType<typeof listProjects>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProjects>>, TError, TData>>, request?: SecondParameter<typeof axiosInstance>}
 ) => {
 
-const {query: queryOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getListProjectsQueryKey();
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof listProjects>>> = ({ signal }) => listProjects(signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listProjects>>> = ({ signal }) => listProjects(requestOptions, signal);
 
 
 
@@ -99,7 +106,7 @@ export function useListProjects<TData = Awaited<ReturnType<typeof listProjects>>
           TError,
           Awaited<ReturnType<typeof listProjects>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof axiosInstance>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /** @summary 사업 목록 조회 (포트폴리오 대시보드) */
@@ -110,17 +117,17 @@ export function useListProjects<TData = Awaited<ReturnType<typeof listProjects>>
           TError,
           Awaited<ReturnType<typeof listProjects>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof axiosInstance>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /** @summary 사업 목록 조회 (포트폴리오 대시보드) */
 export function useListProjects<TData = Awaited<ReturnType<typeof listProjects>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProjects>>, TError, TData>>, }
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProjects>>, TError, TData>>, request?: SecondParameter<typeof axiosInstance>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /** @summary 사업 목록 조회 (포트폴리오 대시보드) */
 export function useListProjects<TData = Awaited<ReturnType<typeof listProjects>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProjects>>, TError, TData>>, }
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProjects>>, TError, TData>>, request?: SecondParameter<typeof axiosInstance>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
@@ -137,18 +144,83 @@ export function useListProjects<TData = Awaited<ReturnType<typeof listProjects>>
 
 
 /**
+ * @summary 신규 사업 등록
+ */
+export const createProject = (
+    createProjectRequest: CreateProjectRequest,
+ options?: SecondParameter<typeof axiosInstance>,signal?: AbortSignal
+) => {
+
+
+      return axiosInstance<ProjectSummaryResponse>(
+      {url: `/api/v1/projects`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createProjectRequest, signal
+    },
+      options);
+    }
+
+
+
+
+export const getCreateProjectMutationKey = () => ['createProject'] as const;
+
+export const getCreateProjectMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createProject>>, TError,CreateProjectMutationVariables, TContext>, request?: SecondParameter<typeof axiosInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof createProject>>, TError,CreateProjectMutationVariables, TContext> => {
+
+const mutationKey = getCreateProjectMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createProject>>, CreateProjectMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createProject(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateProjectMutationResult = NonNullable<Awaited<ReturnType<typeof createProject>>>
+    export type CreateProjectMutationBody = CreateProjectRequest
+    export type CreateProjectMutationError = unknown
+    export type CreateProjectMutationVariables = {data: CreateProjectRequest}
+
+    /** @summary 신규 사업 등록 */
+export const useCreateProject = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createProject>>, TError,CreateProjectMutationVariables, TContext>, request?: SecondParameter<typeof axiosInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createProject>>,
+        TError,
+        CreateProjectMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateProjectMutationOptions(options), queryClient);
+    }
+    /**
  * @summary 사업 홈 요약 조회
  */
 export const getHome = (
     projectId: number,
- signal?: AbortSignal
+ options?: SecondParameter<typeof axiosInstance>,signal?: AbortSignal
 ) => {
 
 
       return axiosInstance<ProjectHomeResponse>(
       {url: `/api/v1/projects/${projectId}`, method: 'GET', signal
     },
-      );
+      options);
     }
 
 
@@ -161,16 +233,16 @@ export const getGetHomeQueryKey = (projectId: number,) => {
     }
 
 
-export const getGetHomeQueryOptions = <TData = Awaited<ReturnType<typeof getHome>>, TError = unknown>(projectId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getHome>>, TError, TData>>, }
+export const getGetHomeQueryOptions = <TData = Awaited<ReturnType<typeof getHome>>, TError = unknown>(projectId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getHome>>, TError, TData>>, request?: SecondParameter<typeof axiosInstance>}
 ) => {
 
-const {query: queryOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getGetHomeQueryKey(projectId);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getHome>>> = ({ signal }) => getHome(projectId, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getHome>>> = ({ signal }) => getHome(projectId, requestOptions, signal);
 
 
 
@@ -191,7 +263,7 @@ export function useGetHome<TData = Awaited<ReturnType<typeof getHome>>, TError =
           TError,
           Awaited<ReturnType<typeof getHome>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof axiosInstance>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /** @summary 사업 홈 요약 조회 */
@@ -202,17 +274,17 @@ export function useGetHome<TData = Awaited<ReturnType<typeof getHome>>, TError =
           TError,
           Awaited<ReturnType<typeof getHome>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof axiosInstance>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /** @summary 사업 홈 요약 조회 */
 export function useGetHome<TData = Awaited<ReturnType<typeof getHome>>, TError = unknown>(
- projectId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getHome>>, TError, TData>>, }
+ projectId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getHome>>, TError, TData>>, request?: SecondParameter<typeof axiosInstance>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /** @summary 사업 홈 요약 조회 */
 export function useGetHome<TData = Awaited<ReturnType<typeof getHome>>, TError = unknown>(
- projectId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getHome>>, TError, TData>>, }
+ projectId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getHome>>, TError, TData>>, request?: SecondParameter<typeof axiosInstance>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 

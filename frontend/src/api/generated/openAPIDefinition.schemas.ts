@@ -8,6 +8,7 @@ export interface UpdateTaskRequest {
   name?: string;
   dept?: string;
   assignee?: string;
+  reason?: string;
 }
 
 export interface TaskResponse {
@@ -60,6 +61,61 @@ export interface MilestoneResponse {
   dDay?: number;
 }
 
+export interface UpdateFolderRequest {
+  /** @minLength 1 */
+  label: string;
+  /** @minLength 1 */
+  nasPath: string;
+  description?: string;
+  sortOrder?: number;
+}
+
+export interface ProjectFolderResponse {
+  folderId?: number;
+  projectId?: number;
+  label?: string;
+  nasPath?: string;
+  description?: string;
+  sortOrder?: number;
+}
+
+export interface CreateProjectRequest {
+  /** @minLength 1 */
+  name: string;
+  /** @minLength 1 */
+  type: string;
+  phase?: string;
+  startDate?: string;
+  endDate?: string;
+  summary?: string;
+  evidenceFolderLabel?: string;
+  evidenceFolderPath?: string;
+}
+
+export interface NextMilestoneInfo {
+  name?: string;
+  plannedDate?: string;
+  dDay?: number;
+}
+
+export interface StatusSignalInfo {
+  status?: string;
+  reasons?: string[];
+}
+
+export interface ProjectSummaryResponse {
+  projectId?: number;
+  name?: string;
+  type?: string;
+  phase?: string;
+  startDate?: string;
+  endDate?: string;
+  progress?: number;
+  openIssueCount?: number;
+  statusSignal?: StatusSignalInfo;
+  nextMilestone?: NextMilestoneInfo;
+}
+
 export interface CreateTaskRequest {
   /** @minLength 1 */
   name: string;
@@ -67,6 +123,29 @@ export interface CreateTaskRequest {
   assignee?: string;
   plannedStart?: string;
   plannedEnd?: string;
+}
+
+export interface CreateFolderRequest {
+  /** @minLength 1 */
+  label: string;
+  /** @minLength 1 */
+  nasPath: string;
+  description?: string;
+}
+
+export interface CreateFileRequest {
+  /** @minLength 1 */
+  name: string;
+  /**
+     * @minLength 1
+     * @pattern xlsx|docx
+     */
+  type: string;
+}
+
+export interface OnlyOfficeCallbackPayload {
+  status?: number;
+  url?: string;
 }
 
 export interface ChangeStatusRequest {
@@ -97,30 +176,6 @@ export interface ChangeActualDatesRequest {
   reason?: string;
 }
 
-export interface NextMilestoneInfo {
-  name?: string;
-  plannedDate?: string;
-  dDay?: number;
-}
-
-export interface StatusSignalInfo {
-  status?: string;
-  reasons?: string[];
-}
-
-export interface ProjectSummaryResponse {
-  projectId?: number;
-  name?: string;
-  type?: string;
-  phase?: string;
-  startDate?: string;
-  endDate?: string;
-  progress?: number;
-  openIssueCount?: number;
-  statusSignal?: StatusSignalInfo;
-  nextMilestone?: NextMilestoneInfo;
-}
-
 export interface RecentEventInfo {
   eventId?: number;
   eventDate?: string;
@@ -147,6 +202,18 @@ export interface ProjectHomeResponse {
 export interface TaskNodeResponse {
   process?: TaskResponse;
   subtasks?: TaskResponse[];
+}
+
+export interface IssueResponse {
+  issueId?: number;
+  title?: string;
+  grade?: string;
+  status?: string;
+  assignee?: string;
+  occurredAt?: string;
+  targetDate?: string;
+  response?: string;
+  overdue?: boolean;
 }
 
 export interface GanttTaskRow {
@@ -183,25 +250,56 @@ export interface GanttResponse {
   processes?: GanttProcessRow[];
 }
 
+export interface NasFileInfo {
+  name?: string;
+  fileKey?: string;
+  size?: number;
+  lastModified?: string;
+  extension?: string;
+}
+
+export interface Document {
+  fileType?: string;
+  key?: string;
+  url?: string;
+  title?: string;
+}
+
+export interface EditorConfig {
+  mode?: string;
+  callbackUrl?: string;
+}
+
+export interface OnlyOfficeConfigResponse {
+  documentType?: string;
+  document?: Document;
+  editorConfig?: EditorConfig;
+}
+
 export interface DeleteRequest {
   /** @minLength 1 */
   reason: string;
 }
 
+export type CreateFile201 = {[key: string]: string};
 
-export interface IssueResponse {
-  issueId?: number;
-  title?: string;
-  grade?: string;
-  status?: string;
-  assignee?: string;
-  occurredAt?: string;
-  targetDate?: string;
-  response?: string;
-  overdue?: boolean;
-}
+export type OnlyOfficeCallbackParams = {
+  key: string;
+};
+
+export type OnlyOfficeCallback200 = {[key: string]: number};
 
 export type ListIssuesParams = {
   /** 현재 open만 지원 */
   status?: string;
 };
+
+export type GetConfigParams = {
+  key: string;
+  mode?: string;
+};
+
+export type StreamFileParams = {
+  key: string;
+};
+

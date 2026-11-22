@@ -26,6 +26,8 @@ import type {
 import { axiosInstance } from '../../axios-instance';
 
 
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
+
 
 
 const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKey: K } => {
@@ -48,14 +50,14 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
  */
 export const getGantt = (
     projectId: number,
- signal?: AbortSignal
+ options?: SecondParameter<typeof axiosInstance>,signal?: AbortSignal
 ) => {
 
 
       return axiosInstance<GanttResponse>(
       {url: `/api/v1/projects/${projectId}/gantt`, method: 'GET', signal
     },
-      );
+      options);
     }
 
 
@@ -68,16 +70,16 @@ export const getGetGanttQueryKey = (projectId: number,) => {
     }
 
 
-export const getGetGanttQueryOptions = <TData = Awaited<ReturnType<typeof getGantt>>, TError = unknown>(projectId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGantt>>, TError, TData>>, }
+export const getGetGanttQueryOptions = <TData = Awaited<ReturnType<typeof getGantt>>, TError = unknown>(projectId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGantt>>, TError, TData>>, request?: SecondParameter<typeof axiosInstance>}
 ) => {
 
-const {query: queryOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getGetGanttQueryKey(projectId);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGantt>>> = ({ signal }) => getGantt(projectId, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGantt>>> = ({ signal }) => getGantt(projectId, requestOptions, signal);
 
 
 
@@ -98,7 +100,7 @@ export function useGetGantt<TData = Awaited<ReturnType<typeof getGantt>>, TError
           TError,
           Awaited<ReturnType<typeof getGantt>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof axiosInstance>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /** @summary 간트 조회 (공정 → 세부 Task 트리) */
@@ -109,17 +111,17 @@ export function useGetGantt<TData = Awaited<ReturnType<typeof getGantt>>, TError
           TError,
           Awaited<ReturnType<typeof getGantt>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof axiosInstance>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /** @summary 간트 조회 (공정 → 세부 Task 트리) */
 export function useGetGantt<TData = Awaited<ReturnType<typeof getGantt>>, TError = unknown>(
- projectId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGantt>>, TError, TData>>, }
+ projectId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGantt>>, TError, TData>>, request?: SecondParameter<typeof axiosInstance>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /** @summary 간트 조회 (공정 → 세부 Task 트리) */
 export function useGetGantt<TData = Awaited<ReturnType<typeof getGantt>>, TError = unknown>(
- projectId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGantt>>, TError, TData>>, }
+ projectId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGantt>>, TError, TData>>, request?: SecondParameter<typeof axiosInstance>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 

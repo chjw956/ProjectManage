@@ -39,6 +39,8 @@ import type {
 import { axiosInstance } from '../../axios-instance';
 
 
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
+
 
 
 const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKey: K } => {
@@ -57,13 +59,13 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
 };
 
 /**
- * @summary Task 기본 정보 수정 (이름·부서·담당자)
+ * @summary Task 기본 정보 수정 (이름·부서·담당자, 담당자 변경 시 사유 필수)
  */
 export const updateTask = (
     projectId: number,
     taskId: number,
     updateTaskRequest: UpdateTaskRequest,
- signal?: AbortSignal
+ options?: SecondParameter<typeof axiosInstance>,signal?: AbortSignal
 ) => {
 
 
@@ -72,7 +74,7 @@ export const updateTask = (
       headers: {'Content-Type': 'application/json', },
       data: updateTaskRequest, signal
     },
-      );
+      options);
     }
 
 
@@ -81,15 +83,15 @@ export const updateTask = (
 export const getUpdateTaskMutationKey = () => ['updateTask'] as const;
 
 export const getUpdateTaskMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateTask>>, TError,UpdateTaskMutationVariables, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateTask>>, TError,UpdateTaskMutationVariables, TContext>, request?: SecondParameter<typeof axiosInstance>}
 ): UseMutationOptions<Awaited<ReturnType<typeof updateTask>>, TError,UpdateTaskMutationVariables, TContext> => {
 
 const mutationKey = getUpdateTaskMutationKey();
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
@@ -97,7 +99,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateTask>>, UpdateTaskMutationVariables> = (props) => {
           const {projectId,taskId,data} = props ?? {};
 
-          return  updateTask(projectId,taskId,data,)
+          return  updateTask(projectId,taskId,data,requestOptions)
         }
 
 
@@ -112,9 +114,9 @@ const {mutation: mutationOptions} = options ?
     export type UpdateTaskMutationError = unknown
     export type UpdateTaskMutationVariables = {projectId: number;taskId: number;data: UpdateTaskRequest}
 
-    /** @summary Task 기본 정보 수정 (이름·부서·담당자) */
+    /** @summary Task 기본 정보 수정 (이름·부서·담당자, 담당자 변경 시 사유 필수) */
 export const useUpdateTask = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateTask>>, TError,UpdateTaskMutationVariables, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateTask>>, TError,UpdateTaskMutationVariables, TContext>, request?: SecondParameter<typeof axiosInstance>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof updateTask>>,
         TError,
@@ -130,7 +132,7 @@ export const deleteTask = (
     projectId: number,
     taskId: number,
     deleteRequest: DeleteRequest,
- signal?: AbortSignal
+ options?: SecondParameter<typeof axiosInstance>,signal?: AbortSignal
 ) => {
 
 
@@ -139,7 +141,7 @@ export const deleteTask = (
       headers: {'Content-Type': 'application/json', },
       data: deleteRequest, signal
     },
-      );
+      options);
     }
 
 
@@ -148,15 +150,15 @@ export const deleteTask = (
 export const getDeleteTaskMutationKey = () => ['deleteTask'] as const;
 
 export const getDeleteTaskMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteTask>>, TError,DeleteTaskMutationVariables, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteTask>>, TError,DeleteTaskMutationVariables, TContext>, request?: SecondParameter<typeof axiosInstance>}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteTask>>, TError,DeleteTaskMutationVariables, TContext> => {
 
 const mutationKey = getDeleteTaskMutationKey();
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
@@ -164,7 +166,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteTask>>, DeleteTaskMutationVariables> = (props) => {
           const {projectId,taskId,data} = props ?? {};
 
-          return  deleteTask(projectId,taskId,data,)
+          return  deleteTask(projectId,taskId,data,requestOptions)
         }
 
 
@@ -181,7 +183,7 @@ const {mutation: mutationOptions} = options ?
 
     /** @summary Task 삭제 (사유 필수, 공정 삭제 시 하위 Task 연쇄 삭제) */
 export const useDeleteTask = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteTask>>, TError,DeleteTaskMutationVariables, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteTask>>, TError,DeleteTaskMutationVariables, TContext>, request?: SecondParameter<typeof axiosInstance>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof deleteTask>>,
         TError,
@@ -196,7 +198,7 @@ export const useDeleteTask = <TError = unknown,
 export const reorder = (
     projectId: number,
     reorderRequest: ReorderRequest,
- signal?: AbortSignal
+ options?: SecondParameter<typeof axiosInstance>,signal?: AbortSignal
 ) => {
 
 
@@ -205,7 +207,7 @@ export const reorder = (
       headers: {'Content-Type': 'application/json', },
       data: reorderRequest, signal
     },
-      );
+      options);
     }
 
 
@@ -214,15 +216,15 @@ export const reorder = (
 export const getReorderMutationKey = () => ['reorder'] as const;
 
 export const getReorderMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reorder>>, TError,ReorderMutationVariables, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reorder>>, TError,ReorderMutationVariables, TContext>, request?: SecondParameter<typeof axiosInstance>}
 ): UseMutationOptions<Awaited<ReturnType<typeof reorder>>, TError,ReorderMutationVariables, TContext> => {
 
 const mutationKey = getReorderMutationKey();
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
@@ -230,7 +232,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof reorder>>, ReorderMutationVariables> = (props) => {
           const {projectId,data} = props ?? {};
 
-          return  reorder(projectId,data,)
+          return  reorder(projectId,data,requestOptions)
         }
 
 
@@ -247,7 +249,7 @@ const {mutation: mutationOptions} = options ?
 
     /** @summary Task 순서 변경 */
 export const useReorder = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reorder>>, TError,ReorderMutationVariables, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reorder>>, TError,ReorderMutationVariables, TContext>, request?: SecondParameter<typeof axiosInstance>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof reorder>>,
         TError,
@@ -263,7 +265,7 @@ export const createSubTask = (
     projectId: number,
     parentId: number,
     createTaskRequest: CreateTaskRequest,
- signal?: AbortSignal
+ options?: SecondParameter<typeof axiosInstance>,signal?: AbortSignal
 ) => {
 
 
@@ -272,7 +274,7 @@ export const createSubTask = (
       headers: {'Content-Type': 'application/json', },
       data: createTaskRequest, signal
     },
-      );
+      options);
     }
 
 
@@ -281,15 +283,15 @@ export const createSubTask = (
 export const getCreateSubTaskMutationKey = () => ['createSubTask'] as const;
 
 export const getCreateSubTaskMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createSubTask>>, TError,CreateSubTaskMutationVariables, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createSubTask>>, TError,CreateSubTaskMutationVariables, TContext>, request?: SecondParameter<typeof axiosInstance>}
 ): UseMutationOptions<Awaited<ReturnType<typeof createSubTask>>, TError,CreateSubTaskMutationVariables, TContext> => {
 
 const mutationKey = getCreateSubTaskMutationKey();
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
@@ -297,7 +299,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof createSubTask>>, CreateSubTaskMutationVariables> = (props) => {
           const {projectId,parentId,data} = props ?? {};
 
-          return  createSubTask(projectId,parentId,data,)
+          return  createSubTask(projectId,parentId,data,requestOptions)
         }
 
 
@@ -314,7 +316,7 @@ const {mutation: mutationOptions} = options ?
 
     /** @summary 세부 Task 생성 */
 export const useCreateSubTask = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createSubTask>>, TError,CreateSubTaskMutationVariables, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createSubTask>>, TError,CreateSubTaskMutationVariables, TContext>, request?: SecondParameter<typeof axiosInstance>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof createSubTask>>,
         TError,
@@ -329,7 +331,7 @@ export const useCreateSubTask = <TError = unknown,
 export const createProcess = (
     projectId: number,
     createTaskRequest: CreateTaskRequest,
- signal?: AbortSignal
+ options?: SecondParameter<typeof axiosInstance>,signal?: AbortSignal
 ) => {
 
 
@@ -338,7 +340,7 @@ export const createProcess = (
       headers: {'Content-Type': 'application/json', },
       data: createTaskRequest, signal
     },
-      );
+      options);
     }
 
 
@@ -347,15 +349,15 @@ export const createProcess = (
 export const getCreateProcessMutationKey = () => ['createProcess'] as const;
 
 export const getCreateProcessMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createProcess>>, TError,CreateProcessMutationVariables, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createProcess>>, TError,CreateProcessMutationVariables, TContext>, request?: SecondParameter<typeof axiosInstance>}
 ): UseMutationOptions<Awaited<ReturnType<typeof createProcess>>, TError,CreateProcessMutationVariables, TContext> => {
 
 const mutationKey = getCreateProcessMutationKey();
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
@@ -363,7 +365,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof createProcess>>, CreateProcessMutationVariables> = (props) => {
           const {projectId,data} = props ?? {};
 
-          return  createProcess(projectId,data,)
+          return  createProcess(projectId,data,requestOptions)
         }
 
 
@@ -380,7 +382,7 @@ const {mutation: mutationOptions} = options ?
 
     /** @summary 공정 생성 */
 export const useCreateProcess = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createProcess>>, TError,CreateProcessMutationVariables, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createProcess>>, TError,CreateProcessMutationVariables, TContext>, request?: SecondParameter<typeof axiosInstance>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof createProcess>>,
         TError,
@@ -396,7 +398,7 @@ export const changeStatus = (
     projectId: number,
     taskId: number,
     changeStatusRequest: ChangeStatusRequest,
- signal?: AbortSignal
+ options?: SecondParameter<typeof axiosInstance>,signal?: AbortSignal
 ) => {
 
 
@@ -405,7 +407,7 @@ export const changeStatus = (
       headers: {'Content-Type': 'application/json', },
       data: changeStatusRequest, signal
     },
-      );
+      options);
     }
 
 
@@ -414,15 +416,15 @@ export const changeStatus = (
 export const getChangeStatusMutationKey = () => ['changeStatus'] as const;
 
 export const getChangeStatusMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof changeStatus>>, TError,ChangeStatusMutationVariables, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof changeStatus>>, TError,ChangeStatusMutationVariables, TContext>, request?: SecondParameter<typeof axiosInstance>}
 ): UseMutationOptions<Awaited<ReturnType<typeof changeStatus>>, TError,ChangeStatusMutationVariables, TContext> => {
 
 const mutationKey = getChangeStatusMutationKey();
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
@@ -430,7 +432,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof changeStatus>>, ChangeStatusMutationVariables> = (props) => {
           const {projectId,taskId,data} = props ?? {};
 
-          return  changeStatus(projectId,taskId,data,)
+          return  changeStatus(projectId,taskId,data,requestOptions)
         }
 
 
@@ -447,7 +449,7 @@ const {mutation: mutationOptions} = options ?
 
     /** @summary 상태 변경 (DONE 외 사유 필수) */
 export const useChangeStatus = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof changeStatus>>, TError,ChangeStatusMutationVariables, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof changeStatus>>, TError,ChangeStatusMutationVariables, TContext>, request?: SecondParameter<typeof axiosInstance>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof changeStatus>>,
         TError,
@@ -463,7 +465,7 @@ export const changeSchedule = (
     projectId: number,
     taskId: number,
     changeScheduleRequest: ChangeScheduleRequest,
- signal?: AbortSignal
+ options?: SecondParameter<typeof axiosInstance>,signal?: AbortSignal
 ) => {
 
 
@@ -472,7 +474,7 @@ export const changeSchedule = (
       headers: {'Content-Type': 'application/json', },
       data: changeScheduleRequest, signal
     },
-      );
+      options);
     }
 
 
@@ -481,15 +483,15 @@ export const changeSchedule = (
 export const getChangeScheduleMutationKey = () => ['changeSchedule'] as const;
 
 export const getChangeScheduleMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof changeSchedule>>, TError,ChangeScheduleMutationVariables, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof changeSchedule>>, TError,ChangeScheduleMutationVariables, TContext>, request?: SecondParameter<typeof axiosInstance>}
 ): UseMutationOptions<Awaited<ReturnType<typeof changeSchedule>>, TError,ChangeScheduleMutationVariables, TContext> => {
 
 const mutationKey = getChangeScheduleMutationKey();
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
@@ -497,7 +499,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof changeSchedule>>, ChangeScheduleMutationVariables> = (props) => {
           const {projectId,taskId,data} = props ?? {};
 
-          return  changeSchedule(projectId,taskId,data,)
+          return  changeSchedule(projectId,taskId,data,requestOptions)
         }
 
 
@@ -514,7 +516,7 @@ const {mutation: mutationOptions} = options ?
 
     /** @summary 계획 일정 변경 (사유 필수) */
 export const useChangeSchedule = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof changeSchedule>>, TError,ChangeScheduleMutationVariables, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof changeSchedule>>, TError,ChangeScheduleMutationVariables, TContext>, request?: SecondParameter<typeof axiosInstance>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof changeSchedule>>,
         TError,
@@ -530,7 +532,7 @@ export const updateProgress = (
     projectId: number,
     taskId: number,
     changeProgressRequest: ChangeProgressRequest,
- signal?: AbortSignal
+ options?: SecondParameter<typeof axiosInstance>,signal?: AbortSignal
 ) => {
 
 
@@ -539,7 +541,7 @@ export const updateProgress = (
       headers: {'Content-Type': 'application/json', },
       data: changeProgressRequest, signal
     },
-      );
+      options);
     }
 
 
@@ -548,15 +550,15 @@ export const updateProgress = (
 export const getUpdateProgressMutationKey = () => ['updateProgress'] as const;
 
 export const getUpdateProgressMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProgress>>, TError,UpdateProgressMutationVariables, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProgress>>, TError,UpdateProgressMutationVariables, TContext>, request?: SecondParameter<typeof axiosInstance>}
 ): UseMutationOptions<Awaited<ReturnType<typeof updateProgress>>, TError,UpdateProgressMutationVariables, TContext> => {
 
 const mutationKey = getUpdateProgressMutationKey();
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
@@ -564,7 +566,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateProgress>>, UpdateProgressMutationVariables> = (props) => {
           const {projectId,taskId,data} = props ?? {};
 
-          return  updateProgress(projectId,taskId,data,)
+          return  updateProgress(projectId,taskId,data,requestOptions)
         }
 
 
@@ -581,7 +583,7 @@ const {mutation: mutationOptions} = options ?
 
     /** @summary 진행률 변경 */
 export const useUpdateProgress = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProgress>>, TError,UpdateProgressMutationVariables, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProgress>>, TError,UpdateProgressMutationVariables, TContext>, request?: SecondParameter<typeof axiosInstance>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof updateProgress>>,
         TError,
@@ -597,7 +599,7 @@ export const changeActualDates = (
     projectId: number,
     taskId: number,
     changeActualDatesRequest: ChangeActualDatesRequest,
- signal?: AbortSignal
+ options?: SecondParameter<typeof axiosInstance>,signal?: AbortSignal
 ) => {
 
 
@@ -606,7 +608,7 @@ export const changeActualDates = (
       headers: {'Content-Type': 'application/json', },
       data: changeActualDatesRequest, signal
     },
-      );
+      options);
     }
 
 
@@ -615,15 +617,15 @@ export const changeActualDates = (
 export const getChangeActualDatesMutationKey = () => ['changeActualDates'] as const;
 
 export const getChangeActualDatesMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof changeActualDates>>, TError,ChangeActualDatesMutationVariables, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof changeActualDates>>, TError,ChangeActualDatesMutationVariables, TContext>, request?: SecondParameter<typeof axiosInstance>}
 ): UseMutationOptions<Awaited<ReturnType<typeof changeActualDates>>, TError,ChangeActualDatesMutationVariables, TContext> => {
 
 const mutationKey = getChangeActualDatesMutationKey();
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
@@ -631,7 +633,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof changeActualDates>>, ChangeActualDatesMutationVariables> = (props) => {
           const {projectId,taskId,data} = props ?? {};
 
-          return  changeActualDates(projectId,taskId,data,)
+          return  changeActualDates(projectId,taskId,data,requestOptions)
         }
 
 
@@ -648,7 +650,7 @@ const {mutation: mutationOptions} = options ?
 
     /** @summary 실제 일정 변경 */
 export const useChangeActualDates = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof changeActualDates>>, TError,ChangeActualDatesMutationVariables, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof changeActualDates>>, TError,ChangeActualDatesMutationVariables, TContext>, request?: SecondParameter<typeof axiosInstance>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof changeActualDates>>,
         TError,
@@ -662,14 +664,14 @@ export const useChangeActualDates = <TError = unknown,
  */
 export const listTasks = (
     projectId: number,
- signal?: AbortSignal
+ options?: SecondParameter<typeof axiosInstance>,signal?: AbortSignal
 ) => {
 
 
       return axiosInstance<TaskNodeResponse[]>(
       {url: `/api/v1/projects/${projectId}/tasks`, method: 'GET', signal
     },
-      );
+      options);
     }
 
 
@@ -682,16 +684,16 @@ export const getListTasksQueryKey = (projectId: number,) => {
     }
 
 
-export const getListTasksQueryOptions = <TData = Awaited<ReturnType<typeof listTasks>>, TError = unknown>(projectId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listTasks>>, TError, TData>>, }
+export const getListTasksQueryOptions = <TData = Awaited<ReturnType<typeof listTasks>>, TError = unknown>(projectId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listTasks>>, TError, TData>>, request?: SecondParameter<typeof axiosInstance>}
 ) => {
 
-const {query: queryOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getListTasksQueryKey(projectId);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof listTasks>>> = ({ signal }) => listTasks(projectId, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listTasks>>> = ({ signal }) => listTasks(projectId, requestOptions, signal);
 
 
 
@@ -712,7 +714,7 @@ export function useListTasks<TData = Awaited<ReturnType<typeof listTasks>>, TErr
           TError,
           Awaited<ReturnType<typeof listTasks>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof axiosInstance>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /** @summary WBS 목록 조회 (공정 트리) */
@@ -723,17 +725,17 @@ export function useListTasks<TData = Awaited<ReturnType<typeof listTasks>>, TErr
           TError,
           Awaited<ReturnType<typeof listTasks>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof axiosInstance>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /** @summary WBS 목록 조회 (공정 트리) */
 export function useListTasks<TData = Awaited<ReturnType<typeof listTasks>>, TError = unknown>(
- projectId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listTasks>>, TError, TData>>, }
+ projectId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listTasks>>, TError, TData>>, request?: SecondParameter<typeof axiosInstance>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /** @summary WBS 목록 조회 (공정 트리) */
 export function useListTasks<TData = Awaited<ReturnType<typeof listTasks>>, TError = unknown>(
- projectId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listTasks>>, TError, TData>>, }
+ projectId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listTasks>>, TError, TData>>, request?: SecondParameter<typeof axiosInstance>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 

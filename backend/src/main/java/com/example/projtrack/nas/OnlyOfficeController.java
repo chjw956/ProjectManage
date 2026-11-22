@@ -61,7 +61,7 @@ public class OnlyOfficeController {
     // 저장 콜백 (status=2: 저장 완료, OnlyOffice가 호출)
     // -------------------------------------------------------------------------
 
-    @Operation(summary = "OnlyOffice 저장 콜백 — NAS 파일 덮어쓰기")
+    @Operation(operationId = "onlyOfficeCallback", summary = "OnlyOffice 저장 콜백 — NAS 파일 덮어쓰기")
     @PostMapping("/callback")
     public Map<String, Integer> callback(@RequestParam String key,
                                           @RequestBody OnlyOfficeCallbackPayload payload) {

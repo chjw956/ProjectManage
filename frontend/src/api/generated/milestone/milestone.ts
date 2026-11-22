@@ -32,6 +32,8 @@ import type {
 import { axiosInstance } from '../../axios-instance';
 
 
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
+
 
 
 const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKey: K } => {
@@ -56,7 +58,7 @@ export const updateMilestone = (
     projectId: number,
     milestoneId: number,
     milestoneRequest: MilestoneRequest,
- signal?: AbortSignal
+ options?: SecondParameter<typeof axiosInstance>,signal?: AbortSignal
 ) => {
 
 
@@ -65,7 +67,7 @@ export const updateMilestone = (
       headers: {'Content-Type': 'application/json', },
       data: milestoneRequest, signal
     },
-      );
+      options);
     }
 
 
@@ -74,15 +76,15 @@ export const updateMilestone = (
 export const getUpdateMilestoneMutationKey = () => ['updateMilestone'] as const;
 
 export const getUpdateMilestoneMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateMilestone>>, TError,UpdateMilestoneMutationVariables, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateMilestone>>, TError,UpdateMilestoneMutationVariables, TContext>, request?: SecondParameter<typeof axiosInstance>}
 ): UseMutationOptions<Awaited<ReturnType<typeof updateMilestone>>, TError,UpdateMilestoneMutationVariables, TContext> => {
 
 const mutationKey = getUpdateMilestoneMutationKey();
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
@@ -90,7 +92,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateMilestone>>, UpdateMilestoneMutationVariables> = (props) => {
           const {projectId,milestoneId,data} = props ?? {};
 
-          return  updateMilestone(projectId,milestoneId,data,)
+          return  updateMilestone(projectId,milestoneId,data,requestOptions)
         }
 
 
@@ -107,7 +109,7 @@ const {mutation: mutationOptions} = options ?
 
     /** @summary 마일스톤 수정 (날짜 변경 시 사유 필수) */
 export const useUpdateMilestone = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateMilestone>>, TError,UpdateMilestoneMutationVariables, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateMilestone>>, TError,UpdateMilestoneMutationVariables, TContext>, request?: SecondParameter<typeof axiosInstance>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof updateMilestone>>,
         TError,
@@ -123,7 +125,7 @@ export const deleteMilestone = (
     projectId: number,
     milestoneId: number,
     deleteRequest: DeleteRequest,
- signal?: AbortSignal
+ options?: SecondParameter<typeof axiosInstance>,signal?: AbortSignal
 ) => {
 
 
@@ -132,7 +134,7 @@ export const deleteMilestone = (
       headers: {'Content-Type': 'application/json', },
       data: deleteRequest, signal
     },
-      );
+      options);
     }
 
 
@@ -141,15 +143,15 @@ export const deleteMilestone = (
 export const getDeleteMilestoneMutationKey = () => ['deleteMilestone'] as const;
 
 export const getDeleteMilestoneMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMilestone>>, TError,DeleteMilestoneMutationVariables, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMilestone>>, TError,DeleteMilestoneMutationVariables, TContext>, request?: SecondParameter<typeof axiosInstance>}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteMilestone>>, TError,DeleteMilestoneMutationVariables, TContext> => {
 
 const mutationKey = getDeleteMilestoneMutationKey();
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
@@ -157,7 +159,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteMilestone>>, DeleteMilestoneMutationVariables> = (props) => {
           const {projectId,milestoneId,data} = props ?? {};
 
-          return  deleteMilestone(projectId,milestoneId,data,)
+          return  deleteMilestone(projectId,milestoneId,data,requestOptions)
         }
 
 
@@ -174,7 +176,7 @@ const {mutation: mutationOptions} = options ?
 
     /** @summary 마일스톤 삭제 (사유 필수) */
 export const useDeleteMilestone = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMilestone>>, TError,DeleteMilestoneMutationVariables, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMilestone>>, TError,DeleteMilestoneMutationVariables, TContext>, request?: SecondParameter<typeof axiosInstance>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof deleteMilestone>>,
         TError,
@@ -188,14 +190,14 @@ export const useDeleteMilestone = <TError = unknown,
  */
 export const listMilestones = (
     projectId: number,
- signal?: AbortSignal
+ options?: SecondParameter<typeof axiosInstance>,signal?: AbortSignal
 ) => {
 
 
       return axiosInstance<MilestoneResponse[]>(
       {url: `/api/v1/projects/${projectId}/milestones`, method: 'GET', signal
     },
-      );
+      options);
     }
 
 
@@ -208,16 +210,16 @@ export const getListMilestonesQueryKey = (projectId: number,) => {
     }
 
 
-export const getListMilestonesQueryOptions = <TData = Awaited<ReturnType<typeof listMilestones>>, TError = unknown>(projectId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMilestones>>, TError, TData>>, }
+export const getListMilestonesQueryOptions = <TData = Awaited<ReturnType<typeof listMilestones>>, TError = unknown>(projectId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMilestones>>, TError, TData>>, request?: SecondParameter<typeof axiosInstance>}
 ) => {
 
-const {query: queryOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getListMilestonesQueryKey(projectId);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof listMilestones>>> = ({ signal }) => listMilestones(projectId, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listMilestones>>> = ({ signal }) => listMilestones(projectId, requestOptions, signal);
 
 
 
@@ -238,7 +240,7 @@ export function useListMilestones<TData = Awaited<ReturnType<typeof listMileston
           TError,
           Awaited<ReturnType<typeof listMilestones>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof axiosInstance>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /** @summary 마일스톤 목록 조회 */
@@ -249,17 +251,17 @@ export function useListMilestones<TData = Awaited<ReturnType<typeof listMileston
           TError,
           Awaited<ReturnType<typeof listMilestones>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof axiosInstance>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /** @summary 마일스톤 목록 조회 */
 export function useListMilestones<TData = Awaited<ReturnType<typeof listMilestones>>, TError = unknown>(
- projectId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMilestones>>, TError, TData>>, }
+ projectId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMilestones>>, TError, TData>>, request?: SecondParameter<typeof axiosInstance>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /** @summary 마일스톤 목록 조회 */
 export function useListMilestones<TData = Awaited<ReturnType<typeof listMilestones>>, TError = unknown>(
- projectId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMilestones>>, TError, TData>>, }
+ projectId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMilestones>>, TError, TData>>, request?: SecondParameter<typeof axiosInstance>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
@@ -281,7 +283,7 @@ export function useListMilestones<TData = Awaited<ReturnType<typeof listMileston
 export const createMilestone = (
     projectId: number,
     milestoneRequest: MilestoneRequest,
- signal?: AbortSignal
+ options?: SecondParameter<typeof axiosInstance>,signal?: AbortSignal
 ) => {
 
 
@@ -290,7 +292,7 @@ export const createMilestone = (
       headers: {'Content-Type': 'application/json', },
       data: milestoneRequest, signal
     },
-      );
+      options);
     }
 
 
@@ -299,15 +301,15 @@ export const createMilestone = (
 export const getCreateMilestoneMutationKey = () => ['createMilestone'] as const;
 
 export const getCreateMilestoneMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createMilestone>>, TError,CreateMilestoneMutationVariables, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createMilestone>>, TError,CreateMilestoneMutationVariables, TContext>, request?: SecondParameter<typeof axiosInstance>}
 ): UseMutationOptions<Awaited<ReturnType<typeof createMilestone>>, TError,CreateMilestoneMutationVariables, TContext> => {
 
 const mutationKey = getCreateMilestoneMutationKey();
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
@@ -315,7 +317,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof createMilestone>>, CreateMilestoneMutationVariables> = (props) => {
           const {projectId,data} = props ?? {};
 
-          return  createMilestone(projectId,data,)
+          return  createMilestone(projectId,data,requestOptions)
         }
 
 
@@ -332,7 +334,7 @@ const {mutation: mutationOptions} = options ?
 
     /** @summary 마일스톤 생성 */
 export const useCreateMilestone = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createMilestone>>, TError,CreateMilestoneMutationVariables, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createMilestone>>, TError,CreateMilestoneMutationVariables, TContext>, request?: SecondParameter<typeof axiosInstance>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof createMilestone>>,
         TError,

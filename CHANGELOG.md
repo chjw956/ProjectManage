@@ -14,6 +14,7 @@
 - **Task 담당자 변경은 사유 필수**: `PUT /api/v1/projects/{projectId}/tasks/{taskId}`에 `reason` 추가. 담당자가 실제로 바뀌면 사유가 없을 때 400, 바뀌면 타임라인 `MEMBER_CHANGED` 기록 (이름·부서는 사유 불필요)
 - 공정·Task 생성과 계획 일정 변경에서 종료일이 시작일보다 앞서면 400
 - 마일스톤을 계획일 없이 생성하면 DB 오류(500) 대신 400
+- OnlyOffice 콜백 API에 `operationId=onlyOfficeCallback` 지정 → `npm run gen:api` 전체 재생성 가능 (`useCallback` 이름 충돌 해소)
 
 ## [0.3.0] - 2026-11-22
 
