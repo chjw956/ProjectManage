@@ -5,7 +5,10 @@ import com.example.projtrack.history.domain.Issue;
 import com.example.projtrack.history.domain.TimelineEvent;
 import com.example.projtrack.history.repository.IssueRepository;
 import com.example.projtrack.history.repository.TimelineEventRepository;
+import com.example.projtrack.nas.InvalidNasPathException;
+import com.example.projtrack.nas.repository.ProjectFolderRepository;
 import com.example.projtrack.project.domain.Project;
+import com.example.projtrack.project.dto.CreateProjectRequest;
 import com.example.projtrack.project.repository.ProjectRepository;
 import com.example.projtrack.wbs.domain.Milestone;
 import com.example.projtrack.wbs.repository.MilestoneRepository;
@@ -16,12 +19,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 @Import(TestcontainersConfiguration.class)
@@ -33,6 +38,7 @@ class ProjectServiceTest {
     @Autowired TimelineEventRepository eventRepo;
     @Autowired IssueRepository issueRepo;
     @Autowired MilestoneRepository milestoneRepo;
+    @Autowired ProjectFolderRepository folderRepo;
     @PersistenceContext EntityManager em;
 
     // =========================================================================
@@ -87,8 +93,58 @@ class ProjectServiceTest {
     }
 
     // =========================================================================
+    // createProject — 증적자료 폴더 (선택)
+    // =========================================================================
+
+    @Test
+    @DisplayName("createProject: 증적자료 경로 없음 → 사업만 생성, 폴더 없음")
+    void createProject_withoutEvidenceFolder() {
+        var data = projectService.createProject(request(null, null));
+
+        Long id = data.project().getProjectId();
+        assertThat(projectRepo.findById(id)).isPresent();
+        assertThat(folderRepo.findByProjectProjectIdOrderBySortOrderAsc(id)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("createProject: 증적자료 경로·이름 입력 → 폴더 1건 함께 등록")
+    void createProject_withEvidenceFolder() {
+        var data = projectService.createProject(request("감사 증적", " /mnt/nas/가상사업/증적자료 "));
+
+        var folders = folderRepo.findByProjectProjectIdOrderBySortOrderAsc(data.project().getProjectId());
+        assertThat(folders).singleElement().satisfies(f -> {
+            assertThat(f.getLabel()).isEqualTo("감사 증적");
+            assertThat(f.getNasPath()).isEqualTo("/mnt/nas/가상사업/증적자료");
+        });
+    }
+
+    @Test
+    @DisplayName("createProject: 경로만 있고 폴더 이름 없음 → IllegalArgumentException(400)")
+    void createProject_pathWithoutLabel_rejected() {
+        assertThatThrownBy(() -> projectService.createProject(request("  ", "/mnt/nas/가상사업/증적자료")))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    @DisplayName("createProject: 허용 루트 밖 경로 → InvalidNasPathException, 사업 등록도 롤백")
+    void createProject_pathOutsideAllowedRoots_rollsBack() {
+        long before = projectRepo.count();
+
+        assertThatThrownBy(() -> projectService.createProject(request("증적자료", "/etc/가상사업")))
+            .isInstanceOf(InvalidNasPathException.class);
+
+        assertThat(projectRepo.count()).isEqualTo(before);
+    }
+
+    // =========================================================================
     // 헬퍼
     // =========================================================================
+
+    private CreateProjectRequest request(String folderLabel, String folderPath) {
+        return new CreateProjectRequest("가상 등록 테스트 사업", "INTERNAL", null, null, null, null,
+            folderLabel, folderPath);
+    }
 
     private Project project(String name) {
         Project p = new Project();

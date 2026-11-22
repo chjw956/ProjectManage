@@ -52,6 +52,45 @@ Base URL: `/api/v1`
 
 ---
 
+### POST /api/v1/projects
+신규 사업 등록. 증적자료 폴더 경로를 함께 보내면 해당 경로를 사업의 NAS 폴더로 같은 트랜잭션에서 등록한다.
+폴더 등록이 실패하면 사업 등록도 롤백된다.
+
+**요청 본문**
+```json
+{
+  "name": "가상 데이터 플랫폼 구축",
+  "type": "INTERNAL",
+  "phase": "계획",
+  "startDate": "2027-01-01",
+  "endDate": "2027-12-31",
+  "summary": "사내 데이터 통합 플랫폼 구축",
+  "evidenceFolderLabel": "증적자료",
+  "evidenceFolderPath": "/mnt/nas/가상데이터플랫폼/증적자료"
+}
+```
+
+| 필드 | 타입 | 필수 | 설명 |
+|------|------|------|------|
+| `name` | string | ✓ | 사업명 |
+| `type` | `INTERNAL` \| `GOV` | ✓ | 사업 유형 |
+| `phase` | string \| null | | 현재 단계 |
+| `startDate` | string (ISO date) \| null | | 시작일 |
+| `endDate` | string (ISO date) \| null | | 종료일 |
+| `summary` | string \| null | | 한 줄 요약 |
+| `evidenceFolderPath` | string \| null | | 증적자료 폴더 NAS 경로. 허용 루트(`nas.allowed-roots`) 하위여야 한다 |
+| `evidenceFolderLabel` | string \| null | `evidenceFolderPath`가 있으면 ✓ | 등록할 폴더 이름 |
+
+**응답 `201 Created`**: `GET /api/v1/projects` 목록 항목과 같은 형식
+
+**오류 응답**
+
+| 코드 | 설명 |
+|------|------|
+| `400 Bad Request` | 필수값 누락, 경로는 있는데 폴더 이름이 없음, 경로가 허용 루트 밖 |
+
+---
+
 ### GET /api/v1/projects/{id}
 사업 홈 요약 조회. 대시보드보다 상세한 정보를 포함하며, 최근 타임라인 이벤트를 함께 반환한다.
 
@@ -164,3 +203,4 @@ Base URL: `/api/v1`
 | `actualDate` | string (ISO date) \| null | 실제 완료일 |
 | `status` | `TODO` \| `IN_PROGRESS` \| `DONE` | 상태 |
 | `dDay` | number | D-day (음수=남은 일수, 양수=초과일수, 0=당일) |
+

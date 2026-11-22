@@ -8,7 +8,6 @@ import com.example.projtrack.project.domain.Project;
 import com.example.projtrack.project.repository.ProjectRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -177,7 +176,7 @@ public class NasService {
         boolean allowed = nasProps.allowedRoots().stream()
             .anyMatch(root -> requested.startsWith(Path.of(root).normalize()));
         if (!allowed) {
-            throw new AccessDeniedException("Path not in allowed roots: " + path);
+            throw new InvalidNasPathException(path);
         }
     }
 

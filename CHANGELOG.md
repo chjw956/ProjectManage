@@ -10,6 +10,15 @@
 
 ## [Unreleased]
 
+### 추가
+- **사업 등록 시 증적자료 폴더 등록 (선택)**: 새 프로젝트 등록 모달에 폴더 이름·NAS 경로 입력란 추가
+  - `POST /api/v1/projects`에 `evidenceFolderLabel`, `evidenceFolderPath` 필드 추가. 경로가 있으면 폴더 이름 필수
+  - 사업과 폴더를 같은 트랜잭션으로 등록하고, 폴더 등록이 실패하면 사업 등록도 롤백
+  - 등록 실패 시 서버 오류 메시지를 모달에 표시
+
+### 변경
+- NAS 경로가 허용 루트 밖일 때 응답을 `403 Forbidden` → `400 Bad Request`로 변경 (`InvalidNasPathException`). 폴더 등록·수정·파일 조회 API 모두 해당
+
 ## [0.2.0] - 2026-11-22
 
 사업 등록, NAS·OnlyOffice 연동, frontend 초기 구성.

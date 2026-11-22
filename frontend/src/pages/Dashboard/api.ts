@@ -10,6 +10,10 @@ export interface CreateProjectRequest {
   startDate?: string | null
   endDate?: string | null
   summary?: string | null
+  /** 증적자료 폴더 이름 — evidenceFolderPath가 있으면 필수 */
+  evidenceFolderLabel?: string | null
+  /** 증적자료 폴더 NAS 경로 (선택) */
+  evidenceFolderPath?: string | null
 }
 
 export const createProject = (body: CreateProjectRequest) =>

@@ -5,6 +5,7 @@ import com.example.projtrack.history.domain.Issue;
 import com.example.projtrack.history.domain.TimelineEvent;
 import com.example.projtrack.history.repository.IssueRepository;
 import com.example.projtrack.history.repository.TimelineEventRepository;
+import com.example.projtrack.nas.NasService;
 import com.example.projtrack.project.domain.Project;
 import com.example.projtrack.project.dto.CreateProjectRequest;
 import com.example.projtrack.project.repository.ProjectRepository;
@@ -39,6 +40,7 @@ public class ProjectService {
     private final ProjectStatusCalculator statusCalculator;
     private final ProjectAccessChecker accessChecker;
     private final Clock clock;
+    private final NasService nasService;
 
     // -------------------------------------------------------------------------
     // 사업 등록
@@ -56,8 +58,21 @@ public class ProjectService {
         // status = "NORMAL" (기본값), securityLevel = "NORMAL" (기본값)
         var saved = projectRepo.save(project);
 
+        // 증적자료 폴더(선택): 같은 트랜잭션에서 등록 → 실패 시 사업 등록도 롤백
+        if (hasText(req.evidenceFolderPath())) {
+            if (!hasText(req.evidenceFolderLabel())) {
+                throw new IllegalArgumentException("증적자료 폴더 경로를 입력하면 폴더 이름도 입력해야 합니다.");
+            }
+            nasService.createFolder(saved.getProjectId(),
+                req.evidenceFolderLabel().strip(), req.evidenceFolderPath().strip(), null);
+        }
+
         var statusSignal = new ProjectStatusCalculator.StatusSignal("NORMAL", List.of());
         return new ProjectSummaryData(saved, 0, 0L, statusSignal, null);
+    }
+
+    private static boolean hasText(String s) {
+        return s != null && !s.isBlank();
     }
 
     // -------------------------------------------------------------------------
